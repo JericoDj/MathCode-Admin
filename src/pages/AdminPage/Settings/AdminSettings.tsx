@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAdminUser } from '../../contexts/AdminUserContext';
+import { useAdminUser } from '../../../contexts/AdminUserContext';
 import './AdminSettings.css';
 
 export const AdminSettings: React.FC = () => {

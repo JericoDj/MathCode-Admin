@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import type { AnalyticsData } from '../../types';
-import { adminAPI } from '../../utils/api';
-import { LoadingSpinner } from '../../components/LoadingSpinner/LoadingSpinner';
+import type { AnalyticsData } from '../../../types';
+import { adminAPI } from '../../../utils/auth.api.tsx';
+import { LoadingSpinner } from '../../../components/LoadingSpinner/LoadingSpinner';
 import './Analytics.css';
 
 export const Analytics: React.FC = () => {

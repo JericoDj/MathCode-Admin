@@ -5,11 +5,12 @@ import './AppNavBar.css';
 
 export const AppNavBar: React.FC = () => {
   const { adminUser, logout } = useAdminUser();
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    setIsMenuOpen(false);
+    setIsMenuOpen(false);  // Close the menu on logout
   };
 
   return (
@@ -22,7 +23,7 @@ export const AppNavBar: React.FC = () => {
       {/* Navigation Links */}
       <div className="navbar-links">
         <Link to="/dashboard" className="nav-btn">Dashboard</Link>
-        <Link to="/users" className="nav-btn">Users</Link>
+        <Link to="/users" className="nav-btn">User Management</Link>
         <Link to="/sessions" className="nav-btn">Sessions</Link>
         <Link to="/analytics" className="nav-btn">Analytics</Link>
         <Link to="/settings" className="nav-btn">Settings</Link>
@@ -30,21 +31,21 @@ export const AppNavBar: React.FC = () => {
 
       {/* User Info / Dropdown */}
       <div className="navbar-user">
-        <span className="user-greeting">Welcome, {adminUser?.name}</span>
+        <span className="user-greeting">Welcome, {adminUser?.firstName} {adminUser?.lastName}</span> {/* Concatenate first and last name */}
         <div className="user-menu">
           <button
             className="user-menu-toggle"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {adminUser?.name.charAt(0).toUpperCase()}
+            {adminUser?.firstName.charAt(0).toUpperCase()} {/* Display first letter of firstName */}
           </button>
 
           {isMenuOpen && (
             <div className="user-dropdown">
               <div className="user-details">
-                <strong>{adminUser?.name}</strong>
+                <strong>{`${adminUser?.firstName} ${adminUser?.lastName}`}</strong> {/* Concatenate firstName and lastName */}
                 <span>{adminUser?.email}</span>
-                <span className="user-role">{adminUser?.role}</span>
+                <span className="user-role">{adminUser?.roles}</span>
               </div>
               <button onClick={handleLogout} className="logout-btn">
                 Logout

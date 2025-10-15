@@ -1,14 +1,17 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminUserProvider } from './contexts/AdminUserProvider';
 import { useAdminUser } from './contexts/AdminUserContext';
+import { SessionProvider } from './contexts/SessionProvider';
+
+
 import { AppNavBar } from './components/AppNavBar/AppNavBar';
 import { AdminLogin } from './pages/Auth/AdminLogin';
-import { AdminDashboard } from './pages/Dashboard/AdminDashboard';
-import { UserManagement } from './pages/Users/UserManagement';
-import { SessionManagement } from './pages/Sessions/SessionManagement';
-import { Analytics } from './pages/Analytics/Analytics';
-import { AdminSettings } from './pages/Settings/AdminSettings';
+import { AdminDashboard } from './pages/AdminPage/Dashboard/AdminDashboard';
+import { UserManagement } from './pages/AdminPage/Users/UserManagement';
+import { SessionManagement } from './pages/AdminPage/Sessions/SessionManagement';
+import { Analytics } from './pages/AdminPage/Analytics/Analytics';
+import { AdminSettings } from './pages/AdminPage/Settings/AdminSettings';
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner';
 import './App.css';
 
@@ -104,11 +107,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <AdminUserProvider>
-      <Router>
-        <div className="App">
-          <AppRoutes />
-        </div>
-      </Router>
+      <SessionProvider>
+        
+          <div className="App">
+            <AppRoutes />
+          </div>
+       
+      </SessionProvider>
     </AdminUserProvider>
   );
 }

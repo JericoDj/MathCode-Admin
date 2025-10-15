@@ -1,62 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
 import { AdminUserContext } from './AdminUserContext';
 import type { AdminUser, LoginCredentials } from '../types';
-import { adminAuthAPI } from '../utils/api';
+import { adminAuthAPI } from '../utils/auth.api.tsx'; // Assuming this is the file where login and auth-related functions are defined
 
-interface AdminUserProviderProps {
-  children: ReactNode;
-}
-
-export const AdminUserProvider: React.FC<AdminUserProviderProps> = ({ children }) => {
+// AdminUserProvider component to manage adminUser state and context
+export const AdminUserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
+  // On component mount, check if there is a saved user in localStorage
+useEffect(() => {
   const checkAuthStatus = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (token) {
-        const user = await adminAuthAPI.verifyToken(token);
-        setAdminUser(user);
-      }
-    } catch (error) {
-      localStorage.removeItem('adminToken');
-    } finally {
-      setIsLoading(false);
+    const savedUser = adminAuthAPI.getSavedUser();
+    console.log('Saved user from localStorage:', savedUser);
+    if (savedUser) {
+      setAdminUser(savedUser);
     }
+    setIsLoading(false); // Make sure this is in `finally` block.
   };
+  checkAuthStatus();
+}, []); // Empty dependency array ensures this only runs once on mount
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const { user, token } = await adminAuthAPI.login(credentials);
-      
-      localStorage.setItem('adminToken', token);
-      setAdminUser(user);
+      const { user, token } = await adminAuthAPI.login(credentials); // Attempt login
+      adminAuthAPI.setUser(user); // Store the user in localStorage
+      adminAuthAPI.setToken(token); // Store the token in localStorage
+      setAdminUser(user); // Update the context with the logged-in user
       return true;
     } catch (error) {
       console.error('Login failed:', error);
       return false;
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading when login attempt is complete
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('adminToken');
-    setAdminUser(null);
+    adminAuthAPI.logout(); // Clear data from localStorage
+    setAdminUser(null); // Reset the adminUser state to null
   };
 
   const updateAdminUser = (updatedUser: Partial<AdminUser>) => {
     if (adminUser) {
-      setAdminUser({ ...adminUser, ...updatedUser });
+      const newUser = { ...adminUser, ...updatedUser }; // Merge the updated user data
+      setAdminUser(newUser); // Update the adminUser state
+      adminAuthAPI.setUser(newUser); // Save the updated user to localStorage
     }
   };
 
+  // Value to be provided to the context consumers
   const value = {
     adminUser,
     isLoading,

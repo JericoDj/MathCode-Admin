@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import type { User } from '../../types';
-import { adminAPI } from '../../utils/api';
-import { LoadingSpinner } from '../../components/LoadingSpinner/LoadingSpinner';
+import type { User } from '../../../types';
+import { adminAPI } from '../../../utils/auth.api.tsx';
+import { LoadingSpinner } from '../../../components/LoadingSpinner/LoadingSpinner';
 import './UserManagement.css';
 
 export const UserManagement: React.FC = () => {

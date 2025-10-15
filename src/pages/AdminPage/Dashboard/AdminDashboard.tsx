@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import type { AnalyticsData } from '../../types';
-import { adminAPI } from '../../utils/api';
-import { LoadingSpinner } from '../../components/LoadingSpinner/LoadingSpinner';
+import type { AnalyticsData } from '../../../types';
+import { adminAPI } from '../../../utils/auth.api.tsx';
+import { LoadingSpinner } from '../../../components/LoadingSpinner/LoadingSpinner';
 import './AdminDashboard.css';
 
 export const AdminDashboard: React.FC = () => {
