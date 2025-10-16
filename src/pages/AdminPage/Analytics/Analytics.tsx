@@ -1,30 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import type { AnalyticsData } from '../../../types';
-import { adminAPI } from '../../../utils/auth.api.tsx';
 import { LoadingSpinner } from '../../../components/LoadingSpinner/LoadingSpinner';
 import './Analytics.css';
 
 export const Analytics: React.FC = () => {
-  const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7days' | '30days' | '90days'>('30days');
 
   useEffect(() => {
-    loadAnalyticsData();
-  }, [timeRange]);
-
-  const loadAnalyticsData = async () => {
-    try {
-      setIsLoading(true);
-      // In a real app, you would pass timeRange to the API
-      const analyticsData = await adminAPI.getDashboardData();
-      setData(analyticsData);
-    } catch (error) {
-      console.error('Failed to load analytics data:', error);
-    } finally {
+    // Simulate loading time
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }
-  };
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [timeRange]);
 
   if (isLoading) {
     return (
@@ -34,10 +23,6 @@ export const Analytics: React.FC = () => {
     );
   }
 
-  if (!data) {
-    return <div>Error loading analytics data</div>;
-  }
-
   return (
     <div className="analytics">
       <div className="page-header">
@@ -45,94 +30,100 @@ export const Analytics: React.FC = () => {
         <p>Detailed insights and performance metrics</p>
       </div>
 
-      <div className="controls">
-        <div className="time-range-selector">
-          <button 
-            className={`time-btn ${timeRange === '7days' ? 'active' : ''}`}
-            onClick={() => setTimeRange('7days')}
-          >
-            7 Days
-          </button>
-          <button 
-            className={`time-btn ${timeRange === '30days' ? 'active' : ''}`}
-            onClick={() => setTimeRange('30days')}
-          >
-            30 Days
-          </button>
-          <button 
-            className={`time-btn ${timeRange === '90days' ? 'active' : ''}`}
-            onClick={() => setTimeRange('90days')}
-          >
-            90 Days
-          </button>
-        </div>
-      </div>
+      {/* Coming Soon Section */}
+      <div className="coming-soon-analytics">
+        <div className="analytics-coming-soon-card">
+          <div className="analytics-icon">📊</div>
+          <h2>Advanced Analytics Coming Soon</h2>
+          <p className="analytics-description">
+            We're building a comprehensive analytics dashboard that will provide deep insights 
+            into your platform's performance, user behavior, and business metrics.
+          </p>
+          
+          <div className="analytics-features">
+            <div className="analytics-feature">
+              <div className="feature-badge">🔜</div>
+              <div className="feature-text">
+                <h4>Real-time Metrics</h4>
+                <p>Live data on user activity, session performance, and revenue</p>
+              </div>
+            </div>
+            
+            <div className="analytics-feature">
+              <div className="feature-badge">🔜</div>
+              <div className="feature-text">
+                <h4>Custom Reports</h4>
+                <p>Generate detailed reports with custom date ranges and filters</p>
+              </div>
+            </div>
+            
+            <div className="analytics-feature">
+              <div className="feature-badge">🔜</div>
+              <div className="feature-text">
+                <h4>Trend Analysis</h4>
+                <p>Identify patterns and trends in user engagement and growth</p>
+              </div>
+            </div>
+            
+            <div className="analytics-feature">
+              <div className="feature-badge">🔜</div>
+              <div className="feature-text">
+                <h4>Export Capabilities</h4>
+                <p>Download data in multiple formats for further analysis</p>
+              </div>
+            </div>
+          </div>
 
-      <div className="metrics-grid">
-        <div className="metric-card large">
-          <h3>Revenue Overview</h3>
-          <div className="revenue-chart">
-            <div className="chart-placeholder">
-              <span>Revenue Chart</span>
-              <div className="chart-bar" style={{height: '80%'}}></div>
-              <div className="chart-bar" style={{height: '60%'}}></div>
-              <div className="chart-bar" style={{height: '90%'}}></div>
-              <div className="chart-bar" style={{height: '75%'}}></div>
-              <div className="chart-bar" style={{height: '85%'}}></div>
+          <div className="analytics-progress">
+            <div className="progress-header">
+              <span>Development Status</span>
+              <span>45% Complete</span>
+            </div>
+            <div className="progress-track">
+              <div className="progress-value" style={{ width: '45%' }}></div>
+            </div>
+            <div className="progress-dates">
+              <span>Started: Jan 2024</span>
+              <span>Estimated: Mar 2024</span>
+            </div>
+          </div>
+
+          <div className="analytics-cta">
+            <p>Need analytics data in the meantime? Contact our support team for custom reports.</p>
+            <div className="analytics-actions">
+              <button className="btn btn-primary">Contact Support</button>
+              <button className="btn btn-secondary">View Documentation</button>
             </div>
           </div>
         </div>
-
-        <div className="metric-card">
-          <h3>User Growth</h3>
-          <div className="metric-value">{data.totalUsers}</div>
-          <div className="metric-change positive">+12.5% from last period</div>
-        </div>
-
-        <div className="metric-card">
-          <h3>Session Completion</h3>
-          <div className="metric-value">{data.completedSessions}</div>
-          <div className="metric-change positive">+8.3% from last period</div>
-        </div>
-
-        <div className="metric-card">
-          <h3>Average Session Price</h3>
-          <div className="metric-value">${(data.revenue / data.completedSessions).toFixed(2)}</div>
-          <div className="metric-change positive">+5.2% from last period</div>
-        </div>
-
-        <div className="metric-card">
-          <h3>Active Sessions</h3>
-          <div className="metric-value">{data.activeSessions}</div>
-          <div className="metric-change">No change</div>
-        </div>
-
-        <div className="metric-card">
-          <h3>Total Revenue</h3>
-          <div className="metric-value">${data.revenue.toLocaleString()}</div>
-          <div className="metric-change positive">+{data.monthlyGrowth}% from last month</div>
-        </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Recent Performance</h2>
-        </div>
-        <div className="performance-list">
-          <div className="performance-item">
-            <div className="performance-metric">Conversion Rate</div>
-            <div className="performance-value">4.2%</div>
-            <div className="performance-change positive">+0.3%</div>
-          </div>
-          <div className="performance-item">
-            <div className="performance-metric">Student Satisfaction</div>
-            <div className="performance-value">94%</div>
-            <div className="performance-change positive">+2%</div>
-          </div>
-          <div className="performance-item">
-            <div className="performance-metric">Tutor Utilization</div>
-            <div className="performance-value">78%</div>
-            <div className="performance-change negative">-5%</div>
+      {/* Placeholder Metrics */}
+      <div className="placeholder-analytics">
+        <div className="placeholder-section">
+          <h3>Quick Stats Preview</h3>
+          <div className="placeholder-metrics">
+            <div className="placeholder-metric">
+              <div className="metric-preview">📈</div>
+              <div className="metric-info">
+                <span>User Growth</span>
+                <small>Monthly tracking available soon</small>
+              </div>
+            </div>
+            <div className="placeholder-metric">
+              <div className="metric-preview">💰</div>
+              <div className="metric-info">
+                <span>Revenue Analytics</span>
+                <small>Detailed breakdown coming</small>
+              </div>
+            </div>
+            <div className="placeholder-metric">
+              <div className="metric-preview">👥</div>
+              <div className="metric-info">
+                <span>Engagement Metrics</span>
+                <small>Session analytics in progress</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>

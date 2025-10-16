@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminUserProvider } from './contexts/AdminUserProvider';
 import { useAdminUser } from './contexts/AdminUserContext';
 import { SessionProvider } from './contexts/SessionProvider';
+import { UserManagementDialogProvider } from './contexts/UserManagementDialogProvider';
 
 
 import { AppNavBar } from './components/AppNavBar/AppNavBar';
@@ -108,10 +109,11 @@ export default function App() {
   return (
     <AdminUserProvider>
       <SessionProvider>
-        
-          <div className="App">
+         <UserManagementDialogProvider>
+ 
             <AppRoutes />
-          </div>
+    
+          </UserManagementDialogProvider>
        
       </SessionProvider>
     </AdminUserProvider>

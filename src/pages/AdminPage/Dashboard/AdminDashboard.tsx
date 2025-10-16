@@ -1,27 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import type { AnalyticsData } from '../../../types';
-import { adminAPI } from '../../../utils/auth.api.tsx';
 import { LoadingSpinner } from '../../../components/LoadingSpinner/LoadingSpinner';
 import './AdminDashboard.css';
 
 export const AdminDashboard: React.FC = () => {
-  const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      const dashboardData = await adminAPI.getDashboardData();
-      setData(dashboardData);
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-    } finally {
+    // Simulate loading time
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }
-  };
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isLoading) {
     return (
@@ -31,70 +22,91 @@ export const AdminDashboard: React.FC = () => {
     );
   }
 
-  if (!data) {
-    return <div>Error loading dashboard data</div>;
-  }
-
   return (
     <div className="dashboard">
       {/* Dashboard Header */}
       <div className="dashboard-header">
-        <h1>Dashboard Overview</h1>
+        <h1>Admin Dashboard</h1>
         <p>Welcome to MathCode Admin Panel</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon total-users">👥</div>
-          <div className="stat-content">
-            <h3>{data.totalUsers.toLocaleString()}</h3>
-            <p>Total Users</p>
+      {/* Coming Soon Section */}
+      <div className="coming-soon-container">
+        <div className="coming-soon-card">
+          <div className="coming-soon-icon">🚀</div>
+          <h2>Dashboard Coming Soon</h2>
+          <p className="coming-soon-description">
+            We're working hard to bring you a comprehensive dashboard with analytics, 
+            statistics, and insights about your platform. This feature will be available 
+            in the next update.
+          </p>
+          
+          <div className="feature-list">
+            <div className="feature-item">
+              <span className="feature-icon">📊</span>
+              <span>Advanced Analytics</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">👥</span>
+              <span>User Statistics</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">💰</span>
+              <span>Revenue Reports</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">📈</span>
+              <span>Growth Metrics</span>
+            </div>
           </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon active-sessions">📚</div>
-          <div className="stat-content">
-            <h3>{data.activeSessions}</h3>
-            <p>Active Sessions</p>
+          <div className="progress-section">
+            <div className="progress-info">
+              <span>Development Progress</span>
+              <span>65%</span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: '65%' }}></div>
+            </div>
           </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon completed-sessions">✅</div>
-          <div className="stat-content">
-            <h3>{data.completedSessions.toLocaleString()}</h3>
-            <p>Completed Sessions</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon revenue">💰</div>
-          <div className="stat-content">
-            <h3>${data.revenue.toLocaleString()}</h3>
-            <p>Total Revenue</p>
-            <span className="growth positive">+{data.monthlyGrowth}%</span>
+          <div className="cta-section">
+            <p>In the meantime, you can manage users and settings from the navigation menu.</p>
+            <div className="cta-buttons">
+              <button className="btn btn-primary">Explore User Management</button>
+              <button className="btn btn-secondary">View Settings</button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="recent-activity card">
-        <div className="card-header">
-          <h2>Recent Activity</h2>
-          <button className="btn btn-secondary">View All</button>
+      {/* Quick Stats Placeholder */}
+      <div className="placeholder-stats">
+        <div className="placeholder-card">
+          <div className="placeholder-icon">👥</div>
+          <div className="placeholder-content">
+            <h3>User Management</h3>
+            <p>Manage students, parents, and administrators</p>
+            <button className="btn btn-outline">Go to Users</button>
+          </div>
         </div>
-        <div className="activity-list">
-          {data.recentActivity.map((activity, index) => (
-            <div className="activity-item" key={index}>
-              <div className="activity-icon">{activity.icon}</div>
-              <div className="activity-content">
-                <p>{activity.description}</p>
-                <span className="activity-time">{activity.timeAgo}</span>
-              </div>
-            </div>
-          ))}
+        
+        <div className="placeholder-card">
+          <div className="placeholder-icon">⚙️</div>
+          <div className="placeholder-content">
+            <h3>System Settings</h3>
+            <p>Configure platform settings and preferences</p>
+            <button className="btn btn-outline">Configure</button>
+          </div>
+        </div>
+        
+        <div className="placeholder-card">
+          <div className="placeholder-icon">📋</div>
+          <div className="placeholder-content">
+            <h3>Reports</h3>
+            <p>Generate and view system reports</p>
+            <button className="btn btn-outline">View Reports</button>
+          </div>
         </div>
       </div>
     </div>

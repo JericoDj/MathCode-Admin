@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdminUser } from '../../contexts/AdminUserContext';
 import './AppNavBar.css';
+import MathCodeLogo from "../../assets/MathCodeNoBGcropped.png";
 
 export const AppNavBar: React.FC = () => {
   const { adminUser, logout } = useAdminUser();
@@ -16,8 +17,8 @@ export const AppNavBar: React.FC = () => {
   return (
     <nav className="admin-navbar">
       {/* Brand / Logo */}
-      <div className="navbar-brand">
-        <h1>MathCode Admin</h1>
+      <div className="navbar-brand mx-sm-0 mx-md-5" >
+          <img className='mx-sm-0 mx-md-5' src={MathCodeLogo} height={60} alt="MathCode Logo" />
       </div>
 
       {/* Navigation Links */}

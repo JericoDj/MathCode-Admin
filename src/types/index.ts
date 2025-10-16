@@ -1,71 +1,180 @@
-// AdminUser - Refined to include permissions and role-based management
+// User - Complete user interface matching MongoDB schema
+export interface User {
+  // Core identification
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  
+  // Authentication & roles
+  passwordHash?: string; // Only available when selected
+  roles: ('student' | 'parent' | 'instructor' | 'admin')[];
+  status: 'active' | 'invited' | 'suspended';
+  
+  // Profile information
+  profile?: {
+    dob?: string; // ISO date string
+    gender?: 'male' | 'female' | 'other';
+    address?: string;
+    timezone?: string;
+  };
+  
+  // Parent-child relationships
+  guardianOf: string[]; // Array of user IDs (children this user is guardian of)
+  guardians: string[]; // Array of user IDs (guardians/parents of this user)
+  
+  // Timestamps
+  lastLoginAt?: string; // ISO date string
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  
+  // Password reset fields (only available when selected)
+  resetPasswordOTP?: string;
+  resetPasswordExpires?: string; // ISO date string
+  
+  // Virtual fields (computed)
+  fullName?: string; // Computed from firstName + lastName
+}
+
+// Admin User - Simplified interface for admin authentication
 export interface AdminUser {
   id: string;
   email: string;
-  firstName: string; // Add firstName
-  lastName: string; // Add lastName
- // You can change it to a string, or keep the union type if you expect it to be one of these
+  firstName: string;
+  lastName: string;
+  roles: ['admin']; // Admin users specifically have admin role
   createdAt: string;
-  lastLogin: string;
-  permissions: string[]; // Permissions for specific actions or areas
-  roles: string[]; // Add roles as an array
+  lastLoginAt?: string;
+  // Note: AdminUser doesn't include all User fields since it's for auth context
 }
 
-// User - More detailed user management including parent info and status tracking
-export interface User {
-  id: string;
+// Extended user interface for display purposes with populated data
+export interface UserWithDetails extends User {
+  // Populated guardian information (when populated)
+  guardianDetails?: User[];
+  guardiansDetails?: User[];
+  
+  // For student-specific display
+  grade?: string; // Could be stored in profile or as separate field
+  
+  // For parent-specific display
+  children?: User[]; // Populated guardianOf
+}
+
+// User creation DTO (for creating new users)
+export interface CreateUserDTO {
+  firstName: string;
+  lastName: string;
   email: string;
-  name: string;
-  grade: string;
-  parentId: string; // ID of the parent (useful for parent-child relationships)
-  parentName: string;
-  parentPhone: string;
-  status: 'active' | 'inactive' | 'pending'; // User status
-  createdAt: string;
-  updatedAt: string; // Track updates to user info
+  phone?: string;
+  roles: ('student' | 'parent' | 'instructor' | 'admin')[];
+  status?: 'active' | 'invited' | 'suspended';
+  profile?: {
+    dob?: string;
+    gender?: 'male' | 'female' | 'other';
+    address?: string;
+    timezone?: string;
+  };
+  password?: string; // For initial password setup
 }
 
-// TutoringSession - Refined to handle session details, pricing, status, and tutor assignment
-export interface TutoringSession {
-  id: string;
+// User update DTO (for updating existing users)
+export interface UpdateUserDTO {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  roles?: ('student' | 'parent' | 'instructor' | 'admin')[];
+  status?: 'active' | 'invited' | 'suspended';
+  profile?: {
+    dob?: string;
+    gender?: 'male' | 'female' | 'other';
+    address?: string;
+    timezone?: string;
+  };
+}
+
+// User filter options for querying
+export interface UserFilterOptions {
+  role?: 'student' | 'parent' | 'instructor' | 'admin';
+  status?: 'active' | 'invited' | 'suspended';
+  search?: string; // Search in firstName, lastName, email
+  page?: number;
+  limit?: number;
+}
+
+// Parent-Student relationship DTOs
+export interface LinkStudentToParentDTO {
   studentId: string;
-  studentName: string;
-  tutorId: string; // Required for assigning a tutor to the session
-  tutorName: string; 
-  subject: string;
-  grade: string;
-  date: string;
-  time: string;
-  duration: number; // Duration in minutes
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending' | 'approved'; // Expanded session status
-  price: number;
-  meetingLink?: string; // Optional meeting link
-  notes?: string; // Optional notes field for session details
+  parentId: string;
 }
 
-// AnalyticsData - Expanded for more detailed analytics data like session activities
+export interface UnlinkStudentFromParentDTO {
+  studentId: string;
+  parentId: string;
+}
+
+// User statistics for admin dashboard
+export interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  invitedUsers: number;
+  suspendedUsers: number;
+  studentsCount: number;
+  parentsCount: number;
+  instructorsCount: number;
+  adminsCount: number;
+}
+
+// Analytics data for dashboard
 export interface AnalyticsData {
   totalUsers: number;
   activeSessions: number;
   completedSessions: number;
   revenue: number;
   monthlyGrowth: number;
-  recentActivity: Activity[]; // Array of activities (e.g., logins, session updates, etc.)
+  recentActivity: any[];
 }
 
-// LoginCredentials - Represents user login details
+// Login credentials
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
-// Activity - Represents activity details (e.g., user logins, session updates)
-export interface Activity {
-  icon: string; // Icon for activity type (e.g., login icon, session icon)
-  description: string; // Description of the activity (e.g., "User X logged in")
-  timeAgo: string; // Time since the activity happened (e.g., "5 minutes ago")
-  activityType: 'login' | 'session-update' | 'user-registration'; // Activity type for classification
+// Auth response
+export interface AuthResponse {
+  user: AdminUser; // Auth response returns AdminUser, not full User
+  token: string;
+  refreshToken?: string;
 }
+
+// Password reset DTOs
+export interface ForgotPasswordDTO {
+  email: string;
+}
+
+export interface ResetPasswordDTO {
+  token: string;
+  newPassword: string;
+  otp?: string;
+}
+
+// Role-based utility types
+export type StudentUser = User & { roles: ['student'] };
+export type ParentUser = User & { roles: ['parent'] };
+export type InstructorUser = User & { roles: ['instructor'] };
+
+// Utility type guards
+export const isStudent = (user: User): user is StudentUser => 
+  user.roles.includes('student');
+
+export const isParent = (user: User): user is ParentUser => 
+  user.roles.includes('parent');
+
+export const isInstructor = (user: User): user is InstructorUser => 
+  user.roles.includes('instructor');
 
 // Session - Represents a tutoring session with all necessary details
 export interface Session {
@@ -95,4 +204,33 @@ export interface Tutor {
   bio?: string; // Optional biography or description of the tutor
   hourlyRate: number; // Tutor's hourly rate for sessions
   availability: string[]; // Array of available time slots (e.g., ['Monday 9:00 AM', 'Tuesday 3:00 PM'])
+}
+
+// TutoringSession - Refined to handle session details, pricing, status, and tutor assignment
+export interface TutoringSession {
+  id: string;
+  studentId: string;
+  studentName: string;
+  tutorId: string; // Required for assigning a tutor to the session
+  tutorName: string; 
+  subject: string;
+  grade: string;
+  date: string;
+  time: string;
+  duration: number; // Duration in minutes
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending' | 'approved'; // Expanded session status
+  price: number;
+  meetingLink?: string; // Optional meeting link
+  notes?: string; // Optional notes field for session details
+}
+
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: ['admin'];
+  createdAt: string;
+  lastLoginAt?: string;
 }

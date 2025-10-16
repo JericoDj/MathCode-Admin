@@ -8,7 +8,7 @@ export const AdminSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    name: adminUser?.name || '',
+    name: adminUser?.firstName || '',
     email: adminUser?.email || '',
   });
 
@@ -27,7 +27,7 @@ export const AdminSettings: React.FC = () => {
       if (adminUser) {
         updateAdminUser({
           ...adminUser,
-          name: profileData.name,
+          
           email: profileData.email,
         });
       }

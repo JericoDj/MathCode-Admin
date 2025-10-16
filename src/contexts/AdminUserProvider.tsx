@@ -12,7 +12,7 @@ export const AdminUserProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 useEffect(() => {
   const checkAuthStatus = async () => {
     const savedUser = adminAuthAPI.getSavedUser();
-    console.log('Saved user from localStorage:', savedUser);
+
     if (savedUser) {
       setAdminUser(savedUser);
     }
