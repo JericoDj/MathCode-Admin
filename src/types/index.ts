@@ -234,3 +234,9 @@ export interface AdminUser {
   createdAt: string;
   lastLoginAt?: string;
 }
+
+
+// Export UserWithGuardians so it can be imported elsewhere
+export interface UserWithGuardians extends User {
+  guardiansDetails?: User[];
+}

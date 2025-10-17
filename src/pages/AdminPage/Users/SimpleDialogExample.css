@@ -1,0 +1,48 @@
+.asd-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 9999;
+}
+
+.asd-modal-box {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  min-width: 300px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.asd-simple-form input,
+.asd-simple-form select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.asd-simple-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.asd-simple-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.asd-open-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #00bfa6;
+  color: white;
+  cursor: pointer;
+}

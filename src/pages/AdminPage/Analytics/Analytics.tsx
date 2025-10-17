@@ -4,7 +4,7 @@ import './Analytics.css';
 
 export const Analytics: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<'7days' | '30days' | '90days'>('30days');
+
 
   useEffect(() => {
     // Simulate loading time
@@ -13,7 +13,7 @@ export const Analytics: React.FC = () => {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [timeRange]);
+  }, []);
 
   if (isLoading) {
     return (
