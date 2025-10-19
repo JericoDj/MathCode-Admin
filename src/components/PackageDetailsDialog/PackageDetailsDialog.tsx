@@ -1,30 +1,30 @@
-// src/components/SessionDetailsDialog/SessionsDialog.tsx
+// src/components/PackageDetailsDialog/PackagesDialog.tsx
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import "./SessionDialog.css";
-import { SessionContext } from "../../contexts/SessionContext";
-import type { Session } from "../../types";
+import "./PackageDialog.css";
+import { PackageContext } from "../../contexts/PackageContext";
+import type { Package } from "../../types";
 
-interface SessionsDialogProps {
+interface PackagesDialogProps {
   open?: boolean;
   onClose?: () => void;
 }
 
 const statusKey = (s?: string) => (s ? s.toLowerCase() : "unknown");
 
-export default function SessionsDialog({
+export default function PackagesDialog({
   open: propOpen,
   onClose: propOnClose,
-}: SessionsDialogProps) {
+}: PackagesDialogProps) {
   // 1) Always call useContext (never conditionally)
-  const ctx = useContext(SessionContext);
+  const ctx = useContext(PackageContext);
 
   useEffect(() => {
-    console.log("SessionDetailsDialog mounted");
+    console.log("PackageDetailsDialog mounted");
   }, []);
 
   // Provide safe fallbacks so we can still call later hooks even if ctx is null
-  const sessionsFromCtx: Session[] =
-    (ctx?.sessions as Session[]) ??
+  const packagesFromCtx: Package[] =
+    (ctx?.packages as Package[]) ??
     []; // default to []
 
   const ctxOpen = !!ctx?.dialogOpen;
@@ -35,18 +35,18 @@ export default function SessionsDialog({
   const onClose = propOnClose ?? ctxClose;
 
   // 2) Call useMemo/useState on every render (even when !open)
-  const sessionArray: Session[] = Array.isArray(sessionsFromCtx)
-    ? sessionsFromCtx
-    : (Object.values(sessionsFromCtx || {}) as Session[]);
+  const packageArray: Package[] = Array.isArray(packagesFromCtx)
+    ? packagesFromCtx
+    : (Object.values(packagesFromCtx || {}) as Package[]);
 
   const grouped = useMemo(() => {
-    return sessionArray.reduce<Record<string, Session[]>>((acc, s) => {
-      const key = statusKey(s.status);
+    return packageArray.reduce<Record<string, Package[]>>((acc, p) => {
+      const key = statusKey(p.status);
       if (!acc[key]) acc[key] = [];
-      acc[key].push(s);
+      acc[key].push(p);
       return acc;
     }, {});
-  }, [sessionArray]);
+  }, [packageArray]);
 
   const statuses = Object.keys(grouped);
   const [activeTab, setActiveTab] = useState<string>("");
@@ -61,7 +61,7 @@ export default function SessionsDialog({
     <div className="dialog-backdrop">
       <div className="dialog-box wide">
         <header className="dialog-header">
-          <h2>📚 All Session Details</h2>
+          <h2>📚 All Package Details</h2>
           <button className="btn-close" onClick={onClose}>✕</button>
         </header>
 
@@ -81,15 +81,15 @@ export default function SessionsDialog({
         {/* Main Scroll Container (Vertical) */}
         <div className="tab-scroll-container scroll-y">
           {grouped[currentTab]?.length ? (
-            grouped[currentTab].map((session, index) => (
-              <SessionCard
-                key={session.id ?? index}
-                session={session}
+            grouped[currentTab].map((pkg, index) => (
+              <PackageCard
+                key={pkg.id ?? index}
+                pkg={pkg}
                 index={index + 1}
               />
             ))
           ) : (
-            <p className="empty">No sessions found.</p>
+            <p className="empty">No packages found.</p>
           )}
         </div>
 
@@ -103,46 +103,46 @@ export default function SessionsDialog({
   );
 }
 
-function SessionCard({ session, index }: { session: Session; index: number }) {
+function PackageCard({ pkg, index }: { pkg: Package; index: number }) {
   const [open, setOpen] = useState(false);
 
-  const dateLabel = session.date ? new Date(session.date as any).toLocaleDateString() : "—";
-  const timeLabel = session.time || "—";
+  const dateLabel = pkg.date ? new Date(pkg.date as any).toLocaleDateString() : "—";
+  const timeLabel = pkg.time || "—";
 
   return (
     <div
-      className={`session-card ${statusKey(session.status)}`}
+      className={`package-card ${statusKey(pkg.status)}`}
       onClick={() => setOpen((v) => !v)}
       role="button"
       tabIndex={0}
     >
-      <div className="session-header">
-        <div className="session-index">{index}</div>
-        <div className="session-main">
+      <div className="package-header">
+        <div className="package-index">{index}</div>
+        <div className="package-main">
           <p>
-            <strong>{session.studentName}</strong> – {session.subject}
-            {session.grade ? <> <small>({session.grade})</small></> : null}
+            <strong>{pkg.studentName}</strong> – {pkg.subject}
+            {pkg.grade ? <> <small>({pkg.grade})</small></> : null}
           </p>
           <small>{dateLabel} • {timeLabel}</small>
         </div>
-        <span className={`status-tag ${statusKey(session.status)}`}>
-          {session.status}
+        <span className={`status-tag ${statusKey(pkg.status)}`}>
+          {pkg.status}
         </span>
       </div>
 
       {open && (
-        <div className="session-details">
-          <DetailRow label="Tutor" value={session.tutorName} />
-          <DetailRow label="Tutor ID" value={session.tutorId} />
-          <DetailRow label="Student ID" value={session.studentId} />
-          <DetailRow label="Duration" value={typeof session.duration === "number" ? `${session.duration} min` : "—"} />
-          <DetailRow label="Price" value={typeof session.price === "number" ? `$${session.price}` : "—"} />
+        <div className="package-details">
+          <DetailRow label="Tutor" value={pkg.tutorName} />
+          <DetailRow label="Tutor ID" value={pkg.tutorId} />
+          <DetailRow label="Student ID" value={pkg.studentId} />
+          <DetailRow label="Duration" value={typeof pkg.duration === "number" ? `${pkg.duration} min` : "—"} />
+          <DetailRow label="Price" value={typeof pkg.price === "number" ? `$${pkg.price}` : "—"} />
           <DetailRow
             label="Meeting Link"
             value={
-              session.meetingLink ? (
-                <a href={session.meetingLink} target="_blank" rel="noreferrer">
-                  {session.meetingLink}
+              pkg.meetingLink ? (
+                <a href={pkg.meetingLink} target="_blank" rel="noreferrer">
+                  {pkg.meetingLink}
                 </a>
               ) : "—"
             }

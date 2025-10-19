@@ -1,5 +1,5 @@
 /* ===========================
-   SessionDialog.css (simple)
+   PackageDialog.css (simple)
    =========================== */
 
 :root {
@@ -112,8 +112,8 @@
   padding: 16px 18px 18px;
 }
 
-/* Session card */
-.session-card {
+/* Package card */
+.package-card {
   background: #fff;
   border: 1px solid var(--border);
   border-left: 4px solid #e5e7eb;
@@ -123,24 +123,24 @@
   transition: box-shadow .15s ease, transform .1s ease;
   cursor: pointer;
 }
-.session-card:hover { box-shadow: 0 6px 18px rgba(2,6,23,.10); transform: translateY(-1px); }
+.package-card:hover { box-shadow: 0 6px 18px rgba(2,6,23,.10); transform: translateY(-1px); }
 
 /* Left color strip by status */
-.session-card.pending   { border-left-color: var(--c-pending); }
-.session-card.scheduled { border-left-color: var(--c-scheduled); }
-.session-card.completed { border-left-color: var(--c-completed); }
-.session-card.cancelled { border-left-color: var(--c-cancelled); }
-.session-card.no-show   { border-left-color: var(--c-no-show); }
+.package-card.pending   { border-left-color: var(--c-pending); }
+.package-card.scheduled { border-left-color: var(--c-scheduled); }
+.package-card.completed { border-left-color: var(--c-completed); }
+.package-card.cancelled { border-left-color: var(--c-cancelled); }
+.package-card.no-show   { border-left-color: var(--c-no-show); }
 
 /* Card header */
-.session-header {
+.package-header {
   display: grid;
   grid-template-columns: 34px 1fr auto;
   align-items: center;
   gap: 10px;
 }
 
-.session-index {
+.package-index {
   width: 28px;
   height: 28px;
   display: grid;
@@ -153,11 +153,11 @@
   border: 1px solid var(--border);
 }
 
-.session-main p {
+.package-main p {
   margin: 0 0 2px 0;
   font-weight: 600;
 }
-.session-main small { color: var(--muted); }
+.package-main small { color: var(--muted); }
 
 /* Status tag */
 .status-tag {
@@ -175,7 +175,7 @@
 .status-tag.no-show   { color: #78350f; background: #fef3c7; border-color: #fde68a; }
 
 /* Expanded details */
-.session-details {
+.package-details {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px dashed var(--border);
@@ -229,7 +229,7 @@
 /* Responsive */
 @media (max-width: 640px) {
   .dialog-box { width: 96vw; }
-  .session-header { grid-template-columns: 28px 1fr; }
+  .package-header { grid-template-columns: 28px 1fr; }
   .status-tag { grid-column: 2 / -1; justify-self: end; }
   .detail-row { grid-template-columns: 1fr; }
 }

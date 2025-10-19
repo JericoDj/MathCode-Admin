@@ -130,8 +130,8 @@ export interface UserStats {
 // Analytics data for dashboard
 export interface AnalyticsData {
   totalUsers: number;
-  activeSessions: number;
-  completedSessions: number;
+  activePackages: number;
+  completedPackages: number;
   revenue: number;
   monthlyGrowth: number;
   recentActivity: any[];
@@ -176,23 +176,23 @@ export const isParent = (user: User): user is ParentUser =>
 export const isInstructor = (user: User): user is InstructorUser => 
   user.roles.includes('instructor');
 
-// Session - Represents a tutoring session with all necessary details
-export interface Session {
+// Package - Represents a tutoringPackage with all necessary details
+export interface Package{
   id?: string;          // Firestore-style or frontend-assigned ID
   _id?: string;      // Backend-assigned ID (if different from 'id')
-  studentId: string; // ID of the student who booked the session
+  studentId: string; // ID of the student who booked the Package
   studentName: string; // Name of the student
-  tutorId: string; // ID of the tutor assigned to the session
+  tutorId: string; // ID of the tutor assigned to the Package
   tutorName: string; // Name of the tutor
-  subject: string; // Subject of the tutoring session
+  subject: string; // Subject of the tutoring Package
   grade: string; // Grade level of the student
-  date: string; // Date of the session
-  time: string; // Time of the session
-  duration: number; // Duration of the session in minutes
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending' | 'approved'; // Current status of the session
-  price: number; // Price of the session
-  meetingLink?: string; // Optional meeting link for online sessions
-  notes?: string; // Optional notes for the session (e.g., special requests, comments)
+  date: string; // Date of the Package
+  time: string; // Time of the Package
+  duration: number; // Duration of the Package in minutes
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending' | 'approved'; // Current status of the Package
+  price: number; // Price of the Package
+  meetingLink?: string; // Optional meeting link for online Package
+  notes?: string; // Optional notes for the Package (e.g., special requests, comments)
 }
 
 // Tutor - Represents a tutor with all necessary details
@@ -202,27 +202,27 @@ export interface Tutor {
   email: string; // Email address of the tutor
   subject: string; // Subject(s) the tutor teaches
   bio?: string; // Optional biography or description of the tutor
-  hourlyRate: number; // Tutor's hourly rate for sessions
+  hourlyRate: number; // Tutor's hourly rate forPackage
   availability: string[]; // Array of available time slots (e.g., ['Monday 9:00 AM', 'Tuesday 3:00 PM'])
 }
 
-// TutoringSession - Refined to handle session details, pricing, status, and tutor assignment
-export interface TutoringSession {
-  id: string;
-  studentId: string;
-  studentName: string;
-  tutorId: string; // Required for assigning a tutor to the session
-  tutorName: string; 
-  subject: string;
-  grade: string;
-  date: string;
-  time: string;
-  duration: number; // Duration in minutes
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending' | 'approved'; // Expanded session status
-  price: number;
-  meetingLink?: string; // Optional meeting link
-  notes?: string; // Optional notes field for session details
-}
+// TutoringPackage - Refined to handle Packagedetails, pricing, status, and tutor assignment
+  export interface TutoringPackage {
+    id: string;
+    studentId: string;
+    studentName: string;
+    tutorId: string; // Required for assigning a tutor to the Package
+    tutorName: string; 
+    subject: string;
+    grade: string;
+    date: string;
+    time: string;
+    duration: number; // Duration in minutes
+    status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending_payment' | 'approved'; // Expanded session status
+    price: number;
+    meetingLink?: string; // Optional meeting link
+    notes?: string; // Optional notes field for Package details
+  }
 
 
 export interface AdminUser {

@@ -25,7 +25,7 @@ export const AppNavBar: React.FC = () => {
       <div className="navbar-links">
         <Link to="/dashboard" className="nav-btn">Dashboard</Link>
         <Link to="/users" className="nav-btn">User Management</Link>
-        <Link to="/sessions" className="nav-btn">Sessions</Link>
+        <Link to="/packages" className="nav-btn">Packages</Link>
         <Link to="/analytics" className="nav-btn">Analytics</Link>
         <Link to="/settings" className="nav-btn">Settings</Link>
       </div>

@@ -7,8 +7,8 @@ const LOCAL_STORAGE_TOKEN_KEY = 'adminToken';
 // AnalyticsData interface since it's missing from types
 interface AnalyticsData {
   totalUsers: number;
-  activeSessions: number;
-  completedSessions: number;
+  activePackages: number;
+  completedPackages: number;
   revenue: number;
   monthlyGrowth: number;
   recentActivity: any[];
@@ -152,8 +152,8 @@ export const adminAPI = {
     const data = await res.json();
     return {
       totalUsers: data.totalUsers,
-      activeSessions: data.activeSessions,
-      completedSessions: data.completedSessions,
+      activePackages: data.activePackages,
+      completedPackages: data.completedPackages,
       revenue: data.revenue,
       monthlyGrowth: data.monthlyGrowth,
       recentActivity: data.recentActivity,

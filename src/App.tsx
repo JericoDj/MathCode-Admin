@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminUserProvider } from './contexts/AdminUserProvider';
 import { useAdminUser } from './contexts/AdminUserContext';
-import { SessionProvider } from './contexts/SessionProvider';
+import { PackageProvider } from './contexts/PackageProvider';
 import { UserManagementDialogProvider } from './contexts/UserManagementDialogProvider';
 
 
@@ -10,7 +10,7 @@ import { AppNavBar } from './components/AppNavBar/AppNavBar';
 import { AdminLogin } from './pages/Auth/AdminLogin';
 import { AdminDashboard } from './pages/AdminPage/Dashboard/AdminDashboard';
 import { UserManagement } from './pages/AdminPage/Users/UserManagement';
-import { SessionManagement } from './pages/AdminPage/Sessions/SessionManagement';
+import { PackageManagement } from './pages/AdminPage/Packages/PackageManagement';
 import { Analytics } from './pages/AdminPage/Analytics/Analytics';
 import { AdminSettings } from './pages/AdminPage/Settings/AdminSettings';
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner';
@@ -76,10 +76,10 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
-      <Route path="/sessions" element={
+      <Route path="/packages" element={
         <ProtectedRoute>
           <AdminLayout>
-            <SessionManagement />
+            <PackageManagement />
           </AdminLayout>
         </ProtectedRoute>
       } />
@@ -108,14 +108,14 @@ function AppRoutes() {
 export default function App() {
   return (
     <AdminUserProvider>
-      <SessionProvider>
+      <PackageProvider>
          <UserManagementDialogProvider>
  
             <AppRoutes />
     
           </UserManagementDialogProvider>
        
-      </SessionProvider>
+      </PackageProvider>
     </AdminUserProvider>
   );
 }

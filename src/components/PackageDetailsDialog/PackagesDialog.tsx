@@ -1,36 +1,36 @@
 import React, { useContext, useState, useEffect } from "react";
-import "./SessionDialog.css";
-import { SessionContext } from "../../contexts/SessionContext";
-import type { Session } from "../../types";
+import "./PackageDialog.css";
+import { PackageContext } from "../../contexts/PackageContext";
+import type { Package } from "../../types";
 
-interface SessionsDialogProps {
+interface PackagesDialogProps {
   open?: boolean;
   onClose?: () => void;
 }
 
 const statusKey = (s?: string) => (s ? s.toLowerCase() : "unknown");
 
-export default function SessionsDialog({
+export default function PackagesDialog({
   open: propOpen,
   onClose: propOnClose,
-}: SessionsDialogProps) {
-  const ctx = useContext(SessionContext);
-  const sessionArray: Session[] = Array.isArray(ctx?.sessions)
-    ? (ctx!.sessions as Session[])
-    : (Object.values(ctx?.sessions || {}) as Session[]);
+}: PackagesDialogProps) {
+  const ctx = useContext(PackageContext);
+  const packageArray: Package[] = Array.isArray(ctx?.packages)
+    ? (ctx!.packages as Package[])
+    : (Object.values(ctx?.packages || {}) as Package[]);
 
   const open = propOpen ?? !!ctx?.dialogOpen;
   const onClose = propOnClose ?? ctx?.closeDialog ?? (() => {});
 
-  const grouped: Record<string, Session[]> = {};
-  for (const s of sessionArray) {
-    const key = statusKey(s.status);
+  const grouped: Record<string, Package[]> = {};
+  for (const p of packageArray) {
+    const key = statusKey(p.status);
     if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(s);
+    grouped[key].push(p);
   }
 
   useEffect(() => {
-    console.log("SessionsDialog mounted");
+    console.log("PackagesDialog mounted");
   }, []);
 
   const statuses = Object.keys(grouped);
@@ -43,7 +43,7 @@ export default function SessionsDialog({
     <div className="dialog-backdrop">
       <div className="dialog-box wide">
         <header className="dialog-header">
-          <h2>📚 All Session Details</h2>
+          <h2>📚 All Package Details</h2>
           <button className="btn-close" onClick={onClose}>✕</button>
         </header>
 
@@ -61,11 +61,11 @@ export default function SessionsDialog({
 
         <div className="tab-scroll-container scroll-y">
           {grouped[currentTab]?.length ? (
-            grouped[currentTab].map((session, index) => (
-              <SessionCard key={session.id ?? index} session={session} index={index + 1} />
+            grouped[currentTab].map((pkg, index) => (
+              <PackageCard key={pkg.id ?? index} package={pkg} index={index + 1} />
             ))
           ) : (
-            <p className="empty">No sessions found.</p>
+            <p className="empty">No packages found.</p>
           )}
         </div>
 
@@ -80,63 +80,62 @@ export default function SessionsDialog({
 }
 
 // ────────────────────────────────────────────────
-// SESSION CARD COMPONENT WITH EDIT FUNCTIONALITY
+// PACKAGE CARD COMPONENT WITH EDIT FUNCTIONALITY
 // ────────────────────────────────────────────────
-function SessionCard({ session, index }: { session: Session; index: number }) {
-  const { updateSession } = useContext(SessionContext);
+function PackageCard({ package: pkg, index }: { package: Package; index: number }) {
+  const { updatePackage } = useContext(PackageContext);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-  const sid = session.id || session._id; // Ensure session ID is defined
+  const pid = pkg.id || pkg._id; // Ensure package ID is defined
 
   const [form, setForm] = useState({
-  tutorName: session.tutorName || "",
-  tutorId: session.tutorId || "",
-  studentName: session.studentName || "",
-  subject: session.subject || "",
-  grade: session.grade || "",
-  duration: session.duration?.toString() || "",
-  price: session.price?.toString() || "",
-  meetingLink: session.meetingLink || "",
-  date: session.date ? new Date(session.date).toISOString().substring(0, 10) : "",
-  time: session.time || "",
-});
+    tutorName: pkg.tutorName || "",
+    tutorId: pkg.tutorId || "",
+    studentName: pkg.studentName || "",
+    subject: pkg.subject || "",
+    grade: pkg.grade || "",
+    duration: pkg.duration?.toString() || "",
+    price: pkg.price?.toString() || "",
+    meetingLink: pkg.meetingLink || "",
+    date: pkg.date ? new Date(pkg.date).toISOString().substring(0, 10) : "",
+    time: pkg.time || "",
+  });
 
   const handleChange = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
-  const updatedData = {
-    ...session,
-    tutorName: form.tutorName.trim(),
-    tutorId: form.tutorId.trim(),
-    studentName: form.studentName.trim(),
-    subject: form.subject.trim(),
-    grade: form.grade.trim(),
-    duration: Number(form.duration) || 0,
-    price: Number(form.price) || 0,
-    meetingLink: form.meetingLink.trim(),
-    date: form.date ? new Date(form.date).toISOString() : null,
-    time: form.time.trim(),
+    const updatedData = {
+      ...pkg,
+      tutorName: form.tutorName.trim(),
+      tutorId: form.tutorId.trim(),
+      studentName: form.studentName.trim(),
+      subject: form.subject.trim(),
+      grade: form.grade.trim(),
+      duration: Number(form.duration) || 0,
+      price: Number(form.price) || 0,
+      meetingLink: form.meetingLink.trim(),
+      date: form.date ? new Date(form.date).toISOString() : null,
+      time: form.time.trim(),
+    };
+    await updatePackage(pid, updatedData);
+    setEditing(false);
   };
-  await updateSession(sid, updatedData);
-  setEditing(false);
-};
-
 
   const handleCancel = () => {
     setEditing(false);
     setForm({
-      tutorName: session.tutorName || "",
-      tutorId: session.tutorId || "",
-      studentName: session.studentName || "",
-  subject: session.subject || "",      
-  grade: session.grade || "",        
-      duration: session.duration?.toString() || "",
-      price: session.price?.toString() || "",
-      meetingLink: session.meetingLink || "",
-      date: session.date ? new Date(session.date).toISOString().substring(0, 10) : "",
-      time: session.time || "",
+      tutorName: pkg.tutorName || "",
+      tutorId: pkg.tutorId || "",
+      studentName: pkg.studentName || "",
+      subject: pkg.subject || "",      
+      grade: pkg.grade || "",        
+      duration: pkg.duration?.toString() || "",
+      price: pkg.price?.toString() || "",
+      meetingLink: pkg.meetingLink || "",
+      date: pkg.date ? new Date(pkg.date).toISOString().substring(0, 10) : "",
+      time: pkg.time || "",
     });
   };
 
@@ -145,42 +144,42 @@ function SessionCard({ session, index }: { session: Session; index: number }) {
 
   return (
     <div
-  className={`session-card ${statusKey(session.status)}`}
-  onClick={(e) => {
-    // Only toggle open/close if the click was directly on the card,
-    // not on inputs, buttons, or selects.
-    const target = e.target as HTMLElement;
-    if (
-      target.tagName === "INPUT" ||
-      target.tagName === "BUTTON" ||
-      target.tagName === "SELECT" ||
-      target.closest("input, button, select, a")
-    ) {
-      e.stopPropagation();
-      return;
-    }
-    setOpen((v) => !v);
-  }}
-  role="button"
-  tabIndex={0}
->
+      className={`package-card ${statusKey(pkg.status)}`}
+      onClick={(e) => {
+        // Only toggle open/close if the click was directly on the card,
+        // not on inputs, buttons, or selects.
+        const target = e.target as HTMLElement;
+        if (
+          target.tagName === "INPUT" ||
+          target.tagName === "BUTTON" ||
+          target.tagName === "SELECT" ||
+          target.closest("input, button, select, a")
+        ) {
+          e.stopPropagation();
+          return;
+        }
+        setOpen((v) => !v);
+      }}
+      role="button"
+      tabIndex={0}
+    >
 
-      <div className="session-header">
-        <div className="session-index">{index}</div>
-        <div className="session-main">
+      <div className="package-header">
+        <div className="package-index">{index}</div>
+        <div className="package-main">
           <p>
-            <strong>{session.studentName}</strong> – {session.subject}
-            {session.grade ? <> <small>({session.grade})</small></> : null}
+            <strong>{pkg.studentName}</strong> – {pkg.subject}
+            {pkg.grade ? <> <small>({pkg.grade})</small></> : null}
           </p>
           <small>{dateLabel} • {timeLabel}</small>
         </div>
-        <span className={`status-tag ${statusKey(session.status)}`}>
-          {session.status}
+        <span className={`status-tag ${statusKey(pkg.status)}`}>
+          {pkg.status}
         </span>
       </div>
 
       {open && (
-        <div className="session-details">
+        <div className="package-details">
           <EditableRow
             editing={editing}
             label="Tutor"
@@ -200,17 +199,17 @@ function SessionCard({ session, index }: { session: Session; index: number }) {
             onChange={(v) => handleChange("studentName", v)}
           />
           <EditableRow
-  editing={editing}
-  label="Subject"
-  value={form.subject}
-  onChange={(v) => handleChange("subject", v)}
-/>
-<EditableRow
-  editing={editing}
-  label="Grade"
-  value={form.grade}
-  onChange={(v) => handleChange("grade", v)}
-/>
+            editing={editing}
+            label="Subject"
+            value={form.subject}
+            onChange={(v) => handleChange("subject", v)}
+          />
+          <EditableRow
+            editing={editing}
+            label="Grade"
+            value={form.grade}
+            onChange={(v) => handleChange("grade", v)}
+          />
           <EditableRow
             editing={editing}
             label="Duration (min)"

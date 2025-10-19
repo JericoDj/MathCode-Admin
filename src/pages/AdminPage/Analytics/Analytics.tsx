@@ -45,7 +45,7 @@ export const Analytics: React.FC = () => {
               <div className="feature-badge">🔜</div>
               <div className="feature-text">
                 <h4>Real-time Metrics</h4>
-                <p>Live data on user activity, session performance, and revenue</p>
+                <p>Live data on user activity, package performance, and revenue</p>
               </div>
             </div>
             
@@ -121,7 +121,7 @@ export const Analytics: React.FC = () => {
               <div className="metric-preview">👥</div>
               <div className="metric-info">
                 <span>Engagement Metrics</span>
-                <small>Session analytics in progress</small>
+                <small>Package analytics in progress</small>
               </div>
             </div>
           </div>

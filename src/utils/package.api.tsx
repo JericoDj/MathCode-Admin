@@ -1,8 +1,8 @@
-// src/utils/session.api.ts
+// src/utils/package.api.ts
 import axios from 'axios';
 
 // Define the base URL for the API (replace with your actual backend URL)
-const API_URL = 'http://localhost:4000/api/sessions';
+const API_URL = 'http://localhost:4000/api/packages';
 
 // Helper function to handle HTTP requests and responses
 const apiRequest = async ({ url, method, data, headers, params }: {
@@ -38,10 +38,10 @@ const apiRequest = async ({ url, method, data, headers, params }: {
   }
 };
 
-// Session API functions
+// Package API functions
 
-// Fetch all sessions
-export const fetchSessions = async () => {
+// Fetch all packages
+export const fetchPackages = async () => {
   const token = localStorage.getItem('adminToken');
   const headers = token
     ? {
@@ -54,13 +54,11 @@ export const fetchSessions = async () => {
     headers: headers, 
   });
 
-
-
   return data;
 };
 
-// Create a new session
-export const createSession = async (sessionData: any) => {
+// Create a new package
+export const createPackage = async (packageData: any) => {
   const token = localStorage.getItem('adminToken');
   const headers = token
     ? {
@@ -71,14 +69,14 @@ export const createSession = async (sessionData: any) => {
   return apiRequest({
     url: API_URL,
     method: 'POST',
-    data: sessionData,  // Pass session data in the object
+    data: packageData,  // Pass package data in the object
     headers: headers,
   });
 };
 
-// Update an existing session
-export const updateSession = async (sessionId: string, updatedData: any) => {
-  const url = `${API_URL}/${sessionId}`;
+// Update an existing package
+export const updatePackage = async (packageId: string, updatedData: any) => {
+  const url = `${API_URL}/${packageId}`;
   const token = localStorage.getItem('adminToken');
   const headers = token
     ? {
@@ -94,9 +92,9 @@ export const updateSession = async (sessionId: string, updatedData: any) => {
   });
 };
 
-// Assign a tutor to a session
-export const assignTutor = async (sessionId: string, tutorId: string) => {
-  const url = `${API_URL}/${sessionId}/assign-tutor`;
+// Assign a tutor to a package
+export const assignTutor = async (packageId: string, tutorId: string) => {
+  const url = `${API_URL}/${packageId}/assign-tutor`;
   const data = { tutorId };
   const token = localStorage.getItem('adminToken');
   const headers = token
@@ -113,9 +111,9 @@ export const assignTutor = async (sessionId: string, tutorId: string) => {
   });
 };
 
-// Optionally, delete a session (if required)
-export const deleteSession = async (sessionId: string) => {
-  const url = `${API_URL}/${sessionId}`;
+// Optionally, delete a package (if required)
+export const deletePackage = async (packageId: string) => {
+  const url = `${API_URL}/${packageId}`;
   const token = localStorage.getItem('adminToken');
   const headers = token
     ? {
@@ -130,9 +128,9 @@ export const deleteSession = async (sessionId: string) => {
   });
 };
 
-// Fetch tutors (for assigning a tutor to a session)
+// Fetch tutors (for assigning a tutor to a package)
 export const fetchTutors = async () => {
-  const url = `http://localhost:4000/api/sessions/{}`; // Adjust as needed
+  const url = `http://localhost:4000/api/packages/{}`; // Adjust as needed
   const token = localStorage.getItem('adminToken');
   const headers = token
     ? {
@@ -147,12 +145,12 @@ export const fetchTutors = async () => {
   });
 };
 
-// Export all the sessionAPI methods as a single object
-export const sessionAPI = {
-  fetchSessions,
-  createSession,
-  updateSession,
+// Export all the packageAPI methods as a single object
+export const packageAPI = {
+  fetchPackages,
+  createPackage,
+  updatePackage,
   assignTutor,
-  deleteSession,
+  deletePackage,
   fetchTutors,
 };

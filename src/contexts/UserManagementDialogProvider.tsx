@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { UserManagementDialogContext, type UserManagementDialogType } from './UserManagementDialogContext';
 
-import { EditStudentModal } from '../components/Users/EditStudentModal';
-import { LinkParentModal } from '../components/Users/LinkParentModal';
-import type { User } from '../types';
+
 
 interface DialogProviderProps {
   children: React.ReactNode;
