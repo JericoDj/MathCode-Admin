@@ -1,16 +1,19 @@
+// App.tsx
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminUserProvider } from './contexts/AdminUserProvider';
 import { useAdminUser } from './contexts/AdminUserContext';
 import { PackageProvider } from './contexts/PackageProvider';
 import { UserManagementDialogProvider } from './contexts/UserManagementDialogProvider';
-
+import { UserProvider } from './contexts/UserProvider';
+import { SessionProvider } from './contexts/SessionProvider'; 
 
 import { AppNavBar } from './components/AppNavBar/AppNavBar';
 import { AdminLogin } from './pages/Auth/AdminLogin';
 import { AdminDashboard } from './pages/AdminPage/Dashboard/AdminDashboard';
 import { UserManagement } from './pages/AdminPage/Users/UserManagement';
 import { PackageManagement } from './pages/AdminPage/Packages/PackageManagement';
+import { SessionsManagement } from './pages/AdminPage/Sessions/SessionsManagement'; // Import Sessions
 import { Analytics } from './pages/AdminPage/Analytics/Analytics';
 import { AdminSettings } from './pages/AdminPage/Settings/AdminSettings';
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner';
@@ -84,6 +87,14 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
+      <Route path="/sessions" element={ // Added Sessions route
+        <ProtectedRoute>
+          <AdminLayout>
+            <SessionsManagement />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/analytics" element={
         <ProtectedRoute>
           <AdminLayout>
@@ -108,14 +119,15 @@ function AppRoutes() {
 export default function App() {
   return (
     <AdminUserProvider>
-      <PackageProvider>
-         <UserManagementDialogProvider>
- 
+      <UserProvider>
+        <PackageProvider>
+           <SessionProvider> {/* Add SessionProvider here */}
+          <UserManagementDialogProvider>
             <AppRoutes />
-    
           </UserManagementDialogProvider>
-       
-      </PackageProvider>
+           </SessionProvider>
+        </PackageProvider>
+      </UserProvider>
     </AdminUserProvider>
   );
 }

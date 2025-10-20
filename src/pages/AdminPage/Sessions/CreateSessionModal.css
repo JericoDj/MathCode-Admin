@@ -1,0 +1,67 @@
+/* pages/AdminPage/Sessions/CreateSessionModal.css */
+
+/* ===== CREATE SESSION MODAL SPECIFIC ===== */
+.loading-text {
+  padding: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  background: #f9fafb;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e7eb;
+}
+
+.info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.selected-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.selected-user-info strong {
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.selected-user-info span {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+/* Enhanced form styling for better layout */
+.create-session-form .form-group {
+  min-height: 80px; /* Ensure consistent height */
+}
+
+.create-session-form .form-group.full-width {
+  min-height: auto;
+}
+
+/* Better select and input styling */
+.create-session-form select,
+.create-session-form input {
+  min-height: 44px; /* Better touch targets */
+}
+
+/* ===== RESPONSIVE IMPROVEMENTS ===== */
+@media (max-width: 768px) {
+  .selected-user-info {
+    font-size: 0.875rem;
+  }
+  
+  .selected-user-info span {
+    font-size: 0.7rem;
+  }
+  
+  .create-session-form .form-group {
+    min-height: 70px;
+  }
+}

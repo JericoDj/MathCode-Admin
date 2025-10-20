@@ -1,0 +1,505 @@
+/* Create Package Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.create-package-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Modal Form */
+.modal-form {
+  padding: 0 2rem 2rem;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-input, .form-select, .form-textarea {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input:disabled, .form-select:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.form-help {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* Student Info Card */
+.student-info-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+.info-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-item label {
+  font-weight: 500;
+  color: #64748b;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+/* Price Display */
+.price-display-large {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.price-display-large strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #059669;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.price-details {
+  color: #64748b;
+  font-size: 0.8rem;
+  display: block;
+}
+
+.price-placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Package Features */
+.package-features {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+.features-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature-item {
+  padding: 0.5rem 0;
+  color: #475569;
+  font-size: 0.9rem;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.feature-item:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: bold;
+}
+
+/* Days Selection */
+.days-selection {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.day-button {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  text-align: center;
+}
+
+.day-button:hover:not(.disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.day-button.selected {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.day-button.disabled {
+  background: #f8fafc;
+  color: #cbd5e1;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.days-help {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  font-style: italic;
+}
+
+/* File Input */
+.form-input[type="file"] {
+  padding: 0.5rem;
+  border: 2px dashed #d1d5db;
+  background: #f9fafb;
+}
+
+.form-input[type="file"]:hover {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+/* Loading State */
+.loading-text {
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  z-index: 10;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 1rem;
+  }
+  
+  .create-package-modal {
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+  
+  .modal-header,
+  .modal-form {
+    padding: 1.5rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .days-selection {
+    justify-content: center;
+  }
+  
+  .day-button {
+    min-width: 50px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .modal-close {
+    align-self: flex-end;
+    margin-top: -3rem;
+  }
+  
+  .form-section {
+    margin-bottom: 1rem;
+  }
+  
+  .price-display-large strong {
+    font-size: 1.25rem;
+  }
+  
+  .package-features {
+    padding: 1rem;
+  }
+  
+  .student-info-card {
+    padding: 1rem;
+  }
+}
+
+/* Scrollbar Styling */
+.create-package-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-package-modal::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.create-package-modal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.create-package-modal::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.create-package-modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+/* Focus States for Accessibility */
+.form-input:focus-visible,
+.form-select:focus-visible,
+.form-textarea:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.day-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}

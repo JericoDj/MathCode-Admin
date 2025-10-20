@@ -48,7 +48,7 @@ interface PackageContextType {
 }
 
 export const PackageManagement: React.FC = () => {
-  const { packages, isLoading, openDialog, getPackages, updatePackage } = 
+  const { packages, isLoading, getPackages, updatePackage } = 
     useContext<PackageContextType>(PackageContext as React.Context<PackageContextType>);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");

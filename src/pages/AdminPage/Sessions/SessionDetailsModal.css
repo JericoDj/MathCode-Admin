@@ -1,0 +1,46 @@
+/* pages/AdminPage/Sessions/SessionDetailsModal.css */
+
+/* ===== SESSION DETAILS ===== */
+.session-details {
+  padding: 1.5rem;
+}
+
+.details-section {
+  margin-bottom: 2rem;
+}
+
+.details-section h3 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1.125rem;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-item label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.detail-item span,
+.detail-item a {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
