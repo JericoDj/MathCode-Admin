@@ -3,17 +3,66 @@ import { LoadingSpinner } from "../../../components/LoadingSpinner/LoadingSpinne
 import { PackageContext } from "../../../contexts/PackageContext";
 import type { TutoringPackage } from "../../../types";
 import { CreatePackageModal } from "./CreatePackageModal";
+import { pricingData, type PricingData } from "../../../types/pricing";
 import "./PackageManagement.css";
 
+// Define types for the component
+interface PackageChild {
+  firstName?: string;
+  lastName?: string;
+  gradeLevel?: string;
+}
+
+interface PackagePayment {
+  fileName?: string;
+}
+
+interface Package {
+  id?: string;
+  _id?: string;
+  child?: PackageChild;
+  studentName?: string;
+  tutorName?: string;
+  subject?: string;
+  grade?: string;
+  date?: string;
+  preferredDate?: string;
+  time?: string;
+  preferredTime?: string;
+  paymentProof?: string;
+  payment?: PackagePayment;
+  price?: number;
+  packageType?: "1-1" | "1-2";
+  packageDuration?: string;
+  status: TutoringPackage["status"];
+  paymentStatus?: string;
+  meetingLink?: string;
+}
+
+interface PackageContextType {
+  packages: Package[];
+  isLoading: boolean;
+  openDialog: (pkg: Package) => void;
+  getPackages: () => Promise<void>;
+  updatePackage: (id: string, updates: Partial<Package>) => Promise<void>;
+}
+
 export const PackageManagement: React.FC = () => {
-  const { packages, isLoading, openDialog, getPackages, updatePackage } =
-    useContext(PackageContext);
+  const { packages, isLoading, openDialog, getPackages, updatePackage } = 
+    useContext<PackageContextType>(PackageContext as React.Context<PackageContextType>);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tempLinks, setTempLinks] = useState<Record<string, string>>({});
   const [linkErrors, setLinkErrors] = useState<Record<string, string | null>>({});
   const [editingRows, setEditingRows] = useState<Record<string, boolean>>({});
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingPackageRows, setEditingPackageRows] = useState<Record<string, boolean>>({});
+  const [editingPriceRows, setEditingPriceRows] = useState<Record<string, boolean>>({});
+  const [editingStatusRows, setEditingStatusRows] = useState<Record<string, boolean>>({});
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [updatingPackageId, setUpdatingPackageId] = useState<string | null>(null);
+  const [packageTypeUpdates, setPackageTypeUpdates] = useState<Record<string, { type: string; duration: string }>>({});
+  const [priceUpdates, setPriceUpdates] = useState<Record<string, string>>({});
+  const [statusUpdates, setStatusUpdates] = useState<Record<string, string>>({});
   const isAdmin = true;
 
   useEffect(() => {
@@ -21,11 +70,11 @@ export const PackageManagement: React.FC = () => {
   }, []);
 
   const filteredPackages = packages.filter(
-    (pkg: any) => statusFilter === "all" || pkg.status === statusFilter
+    (pkg: Package) => statusFilter === "all" || pkg.status === statusFilter
   );
 
   // Function to format status for display
-  const formatStatusDisplay = (status: string) => {
+  const formatStatusDisplay = (status: string): string => {
     switch (status) {
       case "pending_payment":
         return "Pending Payment";
@@ -47,7 +96,7 @@ export const PackageManagement: React.FC = () => {
   };
 
   // Function to format status for tabs/filter
-  const formatFilterStatus = (status: string) => {
+  const formatFilterStatus = (status: string): string => {
     switch (status) {
       case "pending_payment":
         return "Pending Payment";
@@ -58,7 +107,7 @@ export const PackageManagement: React.FC = () => {
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
+  const getStatusBadgeClass = (status: string): string => {
     switch (status) {
       case "pending_payment":
       case "requested_assessment":
@@ -78,8 +127,8 @@ export const PackageManagement: React.FC = () => {
     }
   };
 
-  const validateUrl = (value: string) => {
-    if (!value) return "Link cannot be empty for scheduled packages.";
+  const validateUrl = (value: string): string | null => {
+    if (!value) return null; // Allow empty links now
     try {
       const u = new URL(value);
       if (u.protocol !== "http:" && u.protocol !== "https:") {
@@ -91,51 +140,212 @@ export const PackageManagement: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (pid: string, newStatus: TutoringPackage["status"]) => {
-    updatePackage(pid, { status: newStatus });
-    if (newStatus !== "scheduled") {
-      setEditingRows((prev) => ({ ...prev, [pid]: false }));
-      setLinkErrors((prev) => ({ ...prev, [pid]: null }));
+  const handleStatusChange = async (pid: string, newStatus: TutoringPackage["status"]): Promise<void> => {
+    setUpdatingPackageId(pid);
+    try {
+      await updatePackage(pid, { status: newStatus });
+      setEditingStatusRows(prev => ({ ...prev, [pid]: false }));
+      // Refresh packages to get updated data
+      await getPackages();
+    } catch (error) {
+      console.error("Failed to update package status:", error);
+    } finally {
+      setUpdatingPackageId(null);
     }
   };
 
-  const handleLinkChange = (pid: string, value: string) => {
+  const handleEditStatus = (pid: string): void => {
+    setEditingStatusRows((prev) => ({ ...prev, [pid]: true }));
+    const current = packages.find((x: Package) => (x.id || x._id) === pid);
+    setStatusUpdates(prev => ({
+      ...prev,
+      [pid]: current?.status || ''
+    }));
+  };
+
+  const handleCancelStatusEdit = (pid: string): void => {
+    setEditingStatusRows(prev => ({ ...prev, [pid]: false }));
+  };
+
+  const handlePackageTypeChange = (pid: string, field: 'type' | 'duration', value: string): void => {
+    setPackageTypeUpdates(prev => ({
+      ...prev,
+      [pid]: {
+        ...prev[pid],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleEditPackage = (pid: string): void => {
+    setEditingPackageRows((prev) => ({ ...prev, [pid]: true }));
+    const current = packages.find((x: Package) => (x.id || x._id) === pid);
+    setPackageTypeUpdates(prev => ({
+      ...prev,
+      [pid]: {
+        type: current?.packageType || '',
+        duration: current?.packageDuration || ''
+      }
+    }));
+  };
+
+  const handleSavePackageType = async (pid: string): Promise<void> => {
+    const updates = packageTypeUpdates[pid];
+    if (!updates?.type || !updates?.duration) return;
+
+    setUpdatingPackageId(pid);
+    try {
+      // Get the price from pricing data
+      const packageType = updates.type as keyof PricingData;
+      const duration = updates.duration;
+      const packageInfo = pricingData[packageType]?.plans[duration]?.[0];
+      
+      const updateData: Partial<Package> = {
+        packageType: updates.type as "1-1" | "1-2",
+        packageDuration: duration
+      };
+
+      // Set price based on package type and duration
+      if (packageInfo) {
+        const price = parseInt(packageInfo.price.replace(/[^\d]/g, ''));
+        updateData.price = price;
+      }
+
+      await updatePackage(pid, updateData);
+      setPackageTypeUpdates(prev => {
+        const newState = { ...prev };
+        delete newState[pid];
+        return newState;
+      });
+      setEditingPackageRows(prev => ({ ...prev, [pid]: false }));
+      // Refresh packages to get updated data
+      await getPackages();
+    } catch (error) {
+      console.error("Failed to update package type:", error);
+    } finally {
+      setUpdatingPackageId(null);
+    }
+  };
+
+  const handleCancelPackageEdit = (pid: string): void => {
+    setEditingPackageRows(prev => ({ ...prev, [pid]: false }));
+    setPackageTypeUpdates(prev => {
+      const newState = { ...prev };
+      delete newState[pid];
+      return newState;
+    });
+  };
+
+  const handleEditPrice = (pid: string): void => {
+    setEditingPriceRows((prev) => ({ ...prev, [pid]: true }));
+    const current = packages.find((x: Package) => (x.id || x._id) === pid);
+    setPriceUpdates(prev => ({
+      ...prev,
+      [pid]: current?.price?.toString() || ''
+    }));
+  };
+
+  const handlePriceChange = (pid: string, value: string): void => {
+    setPriceUpdates(prev => ({
+      ...prev,
+      [pid]: value
+    }));
+  };
+
+  const handleSavePrice = async (pid: string): Promise<void> => {
+    const priceValue = priceUpdates[pid];
+    if (!priceValue) return;
+
+    setUpdatingPackageId(pid);
+    try {
+      const price = parseInt(priceValue.replace(/[^\d]/g, ''));
+      await updatePackage(pid, { price });
+      setEditingPriceRows(prev => ({ ...prev, [pid]: false }));
+      // Refresh packages to get updated data
+      await getPackages();
+    } catch (error) {
+      console.error("Failed to update price:", error);
+    } finally {
+      setUpdatingPackageId(null);
+    }
+  };
+
+  const handleCancelPriceEdit = (pid: string): void => {
+    setEditingPriceRows(prev => ({ ...prev, [pid]: false }));
+    setPriceUpdates(prev => {
+      const newState = { ...prev };
+      delete newState[pid];
+      return newState;
+    });
+  };
+
+  const handleLinkChange = (pid: string, value: string): void => {
     setTempLinks((prev) => ({ ...prev, [pid]: value }));
-    const p = packages.find((x: any) => (x.id || x._id) === pid);
-    if (p?.status === "scheduled") {
+    // Validate URL only if there's a value
+    if (value) {
       setLinkErrors((prev) => ({
         ...prev,
-        [pid]: value
-          ? validateUrl(value)
-          : "Link cannot be empty for scheduled packages.",
+        [pid]: validateUrl(value)
       }));
     } else {
       setLinkErrors((prev) => ({ ...prev, [pid]: null }));
     }
   };
 
-  const handleEdit = (pid: string) => {
+  const handleEdit = (pid: string): void => {
     setEditingRows((prev) => ({ ...prev, [pid]: true }));
   };
 
-  const handleCancel = (pid: string) => {
-    const current = packages.find((x: any) => (x.id || x._id) === pid);
+  const handleCancel = (pid: string): void => {
+    const current = packages.find((x: Package) => (x.id || x._id) === pid);
     setTempLinks((prev) => ({ ...prev, [pid]: current?.meetingLink ?? "" }));
     setLinkErrors((prev) => ({ ...prev, [pid]: null }));
     setEditingRows((prev) => ({ ...prev, [pid]: false }));
   };
 
-  const handleSaveLink = async (pid: string) => {
-    const p = packages.find((x: any) => (x.id || x._id) === pid);
+  const handleSaveLink = async (pid: string): Promise<void> => {
+    const p = packages.find((x: Package) => (x.id || x._id) === pid);
     if (!p) return;
 
     const link = tempLinks[pid]?.trim() ?? "";
-    const err = p.status === "scheduled" ? validateUrl(link) : null;
+    const err = validateUrl(link); // Validate only if there's a value
+    
     setLinkErrors((prev) => ({ ...prev, [pid]: err }));
     if (err) return;
 
-    await updatePackage(pid, { meetingLink: link });
-    setEditingRows((prev) => ({ ...prev, [pid]: false }));
+    setUpdatingPackageId(pid);
+    try {
+      await updatePackage(pid, { meetingLink: link });
+      setEditingRows((prev) => ({ ...prev, [pid]: false }));
+      // Refresh packages to get updated data
+      await getPackages();
+    } catch (error) {
+      console.error("Failed to update meeting link:", error);
+    } finally {
+      setUpdatingPackageId(null);
+    }
+  };
+
+  // Get available package durations based on package type
+  const getPackageDurations = (packageType: string): string[] => {
+    return Object.keys(pricingData[packageType as keyof PricingData]?.plans || {});
+  };
+
+  // Get price for display
+  const getPackagePrice = (pkg: Package): string => {
+    if (pkg.price) {
+      return `₱${pkg.price.toLocaleString()}`;
+    }
+    
+    // Try to get price from package type and duration
+    if (pkg.packageType && pkg.packageDuration) {
+      const packageInfo = pricingData[pkg.packageType as keyof PricingData]?.plans[pkg.packageDuration]?.[0];
+      if (packageInfo) {
+        return packageInfo.price;
+      }
+    }
+    
+    return "-";
   };
 
   if (isLoading) {
@@ -176,7 +386,7 @@ export const PackageManagement: React.FC = () => {
           <div className="stat-icon">📅</div>
           <div className="stat-content">
             <span className="stat-number">
-              {packages.filter((p: any) => p.status === "scheduled").length}
+              {packages.filter((p: Package) => p.status === "scheduled").length}
             </span>
             <span className="stat-label">Scheduled</span>
           </div>
@@ -185,7 +395,7 @@ export const PackageManagement: React.FC = () => {
           <div className="stat-icon">✅</div>
           <div className="stat-content">
             <span className="stat-number">
-              {packages.filter((p: any) => p.status === "completed").length}
+              {packages.filter((p: Package) => p.status === "completed").length}
             </span>
             <span className="stat-label">Completed</span>
           </div>
@@ -194,7 +404,7 @@ export const PackageManagement: React.FC = () => {
           <div className="stat-icon">💳</div>
           <div className="stat-content">
             <span className="stat-number">
-              {packages.filter((p: any) => p.status === "pending_payment").length}
+              {packages.filter((p: Package) => p.status === "pending_payment").length}
             </span>
             <span className="stat-label">Pending Payment</span>
           </div>
@@ -203,7 +413,7 @@ export const PackageManagement: React.FC = () => {
           <div className="stat-icon">📊</div>
           <div className="stat-content">
             <span className="stat-number">
-              {packages.filter((p: any) => p.status === "requested_assessment").length}
+              {packages.filter((p: Package) => p.status === "requested_assessment").length}
             </span>
             <span className="stat-label">Assessment Requests</span>
           </div>
@@ -243,19 +453,18 @@ export const PackageManagement: React.FC = () => {
                 <th>Teacher</th>
                 <th>Subject/Grade</th>
                 <th>Date & Time</th>
-                <th>Payment Upload</th>
                 <th>Price</th>
                 <th>Package</th>
                 <th>Status</th>
                 <th className="meeting-link-column">Meeting Link</th>
-                <th className="actions-column">Actions</th>
+                <th>Payment Upload</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredPackages.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="empty-state">
+                  <td colSpan={9} className="empty-state">
                     <div className="empty-content">
                       <div className="empty-icon">📦</div>
                       <h3>No packages found</h3>
@@ -270,13 +479,18 @@ export const PackageManagement: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredPackages.map((pkg: any) => {
-                  const pid = pkg.id || pkg._id;
+                filteredPackages.map((pkg: Package) => {
+                  const pid = pkg.id || pkg._id || '';
                   const linkValue = tempLinks[pid] ?? pkg.meetingLink ?? "";
                   const error = linkErrors[pid] ?? null;
-                  const isScheduled = pkg.status === "scheduled";
-                  const canEdit = isAdmin && isScheduled;
-                  const isEditing = !!editingRows[pid];
+                  const isEditingLink = !!editingRows[pid];
+                  const isEditingPackage = !!editingPackageRows[pid];
+                  const isEditingPrice = !!editingPriceRows[pid];
+                  const isEditingStatus = !!editingStatusRows[pid];
+                  const isUpdating = updatingPackageId === pid;
+                  const packageUpdate = packageTypeUpdates[pid] || { type: pkg.packageType || '', duration: pkg.packageDuration || '' };
+                  const priceValue = priceUpdates[pid] || pkg.price?.toString() || '';
+                  const statusValue = statusUpdates[pid] || pkg.status || '';
 
                   // Get student name from child object or studentName field
                   const studentName = pkg.child 
@@ -311,31 +525,175 @@ export const PackageManagement: React.FC = () => {
                           <small className="time-text">{pkg.time || pkg.preferredTime || "-"}</small>
                         </div>
                       </td>
-                      <td className="payment-cell">
-                        {pkg.paymentProof ? `${pkg.paymentProof} min` : "-"}
-                      </td>
                       <td className="price-cell">
-                        {pkg.price ? `₱${pkg.price.toLocaleString()}` : "-"}
-                      </td>
-                      <td className="package-type-cell">
-                        {pkg.packageType ? (
-                          <div className="package-type-info">
-                            <strong className="package-name">
-                              {pkg.packageType === "1-1" ? "1:1 Private" : "1:2 Small Group"}
-                            </strong>
-                            <small className="package-duration">{pkg.packageDuration} sessions/week</small>
+                        {!isEditingPrice ? (
+                          <div className="price-display">
+                            <strong>{getPackagePrice(pkg)}</strong>
+                            <button
+                              className="btn btn-sm btn-outline price-edit-btn"
+                              onClick={() => handleEditPrice(pid)}
+                              disabled={isUpdating}
+                            >
+                              Edit
+                            </button>
                           </div>
                         ) : (
-                          "-"
+                          <div className="price-editor">
+                            <input
+                              type="text"
+                              className="price-input"
+                              placeholder="Enter price"
+                              value={priceValue}
+                              onChange={(e) => handlePriceChange(pid, e.target.value)}
+                              disabled={isUpdating}
+                            />
+                            <div className="price-edit-actions">
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => handleSavePrice(pid)}
+                                disabled={isUpdating || !priceValue}
+                              >
+                                {isUpdating ? "Saving..." : "Save"}
+                              </button>
+                              <button
+                                className="btn btn-sm btn-ghost"
+                                onClick={() => handleCancelPriceEdit(pid)}
+                                disabled={isUpdating}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="package-type-cell">
+                        {!isEditingPackage ? (
+                          <div className="package-type-display">
+                            <div className="package-type-info">
+                              <strong className="package-name">
+                                {pkg.packageType === "1-1" ? "1:1 Private" : 
+                                 pkg.packageType === "1-2" ? "1:2 Small Group" : 
+                                 "Not Set"}
+                              </strong>
+                              {pkg.packageDuration && (
+                                <small className="package-duration">{pkg.packageDuration} sessions/week</small>
+                              )}
+                            </div>
+                            <button
+                              className="btn btn-sm btn-outline package-edit-btn"
+                              onClick={() => handleEditPackage(pid)}
+                              disabled={isUpdating}
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="package-type-editor">
+                            <div className="package-selectors">
+                              <select
+                                value={packageUpdate.type}
+                                onChange={(e) => handlePackageTypeChange(pid, 'type', e.target.value)}
+                                className="package-type-dropdown"
+                                disabled={isUpdating}
+                              >
+                                <option value="">Select Package Type</option>
+                                <option value="1-1">1:1 Private</option>
+                                <option value="1-2">1:2 Small Group</option>
+                              </select>
+                              
+                              {packageUpdate.type && (
+                                <select
+                                  value={packageUpdate.duration}
+                                  onChange={(e) => handlePackageTypeChange(pid, 'duration', e.target.value)}
+                                  className="package-duration-dropdown"
+                                  disabled={isUpdating}
+                                >
+                                  <option value="">Select Duration</option>
+                                  {getPackageDurations(packageUpdate.type).map(duration => (
+                                    <option key={duration} value={duration}>
+                                      {duration} sessions/week
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+                            {packageUpdate.type && packageUpdate.duration && (
+                              <div className="package-price-preview">
+                                <small>
+                                  Price: {pricingData[packageUpdate.type as keyof PricingData]?.plans[packageUpdate.duration]?.[0]?.price}
+                                </small>
+                              </div>
+                            )}
+                            <div className="package-edit-actions">
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => handleSavePackageType(pid)}
+                                disabled={isUpdating || !packageUpdate.type || !packageUpdate.duration}
+                              >
+                                {isUpdating ? "Saving..." : "Save"}
+                              </button>
+                              <button
+                                className="btn btn-sm btn-ghost"
+                                onClick={() => handleCancelPackageEdit(pid)}
+                                disabled={isUpdating}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
                         )}
                       </td>
                       <td className="status-cell">
-                        <span className={`status-badge ${getStatusBadgeClass(pkg.status)}`}>
-                          {formatStatusDisplay(pkg.status)}
-                        </span>
-                        {pkg.paymentStatus && pkg.paymentStatus !== 'verified' && (
-                          <div className="payment-status">
-                            <small>Payment: {pkg.paymentStatus}</small>
+                        {!isEditingStatus ? (
+                          <div className="status-display">
+                            <span className={`status-badge ${getStatusBadgeClass(pkg.status)}`}>
+                              {formatStatusDisplay(pkg.status)}
+                            </span>
+                            {pkg.paymentStatus && pkg.paymentStatus !== 'verified' && (
+                              <div className="payment-status">
+                                <small>Payment: {pkg.paymentStatus}</small>
+                              </div>
+                            )}
+                            <button
+                              className="btn btn-sm btn-outline status-edit-btn"
+                              onClick={() => handleEditStatus(pid)}
+                              disabled={isUpdating}
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="status-editor">
+                            <select
+                              value={statusValue}
+                              onChange={(e) => setStatusUpdates(prev => ({ ...prev, [pid]: e.target.value }))}
+                              className="status-dropdown"
+                              disabled={isUpdating}
+                            >
+                              <option value="requested_assessment">Assessment Requested</option>
+                              <option value="pending_payment">Pending Payment</option>
+                              <option value="approved">Approved</option>
+                              <option value="scheduled">Scheduled</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                              <option value="no-show">No Show</option>
+                            </select>
+                            <div className="status-edit-actions">
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => handleStatusChange(pid, statusValue as TutoringPackage["status"])}
+                                disabled={isUpdating}
+                              >
+                                {isUpdating ? "Saving..." : "Save"}
+                              </button>
+                              <button
+                                className="btn btn-sm btn-ghost"
+                                onClick={() => handleCancelStatusEdit(pid)}
+                                disabled={isUpdating}
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </div>
                         )}
                       </td>
@@ -346,77 +704,62 @@ export const PackageManagement: React.FC = () => {
                             type="url"
                             className={`link-input ${error ? "input-error" : ""}`}
                             placeholder={
-                              canEdit
-                                ? isEditing
-                                  ? "https://meet.google.com/..."
-                                  : "Click Edit to modify"
-                                : "No link available"
+                              isEditingLink
+                                ? "https://meet.google.com/..."
+                                : "Click Edit to add/modify link"
                             }
                             value={linkValue}
                             onChange={(e) => handleLinkChange(pid, e.target.value)}
-                            disabled={!(canEdit && isEditing)}
+                            disabled={!isEditingLink || isUpdating}
                           />
-                          {!isEditing ? (
+                          {!isEditingLink ? (
                             <button
                               className="btn btn-sm btn-outline"
                               onClick={() => handleEdit(pid)}
-                              disabled={!canEdit}
+                              disabled={isUpdating}
                             >
-                              Edit
+                              {isUpdating ? "Updating..." : "Edit"}
                             </button>
                           ) : (
                             <div className="edit-actions">
                               <button
                                 className="btn btn-sm btn-success"
                                 onClick={() => handleSaveLink(pid)}
-                                disabled={!!error}
+                                disabled={!!error || isUpdating}
                               >
-                                Save
+                                {isUpdating ? "Saving..." : "Save"}
                               </button>
                               <button
                                 className="btn btn-sm btn-ghost"
                                 onClick={() => handleCancel(pid)}
+                                disabled={isUpdating}
                               >
                                 Cancel
                               </button>
                             </div>
                           )}
                           {error && <div className="field-error">{error}</div>}
-                          {!canEdit && !linkValue && (
-                            <div className="link-help">
-                              Set status to "Scheduled" to add a link
-                            </div>
-                          )}
                         </div>
                       </td>
 
-                      <td className="actions-cell">
-                        <div className="action-buttons">
-                          <select
-                            value={pkg.status}
-                            onChange={(e) =>
-                              handleStatusChange(
-                                pid,
-                                e.target.value as TutoringPackage["status"]
-                              )
-                            }
-                            className="status-dropdown"
-                          >
-                            <option value="requested_assessment">Assessment Requested</option>
-                            <option value="pending_payment">Pending Payment</option>
-                            <option value="approved">Approved</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="no-show">No Show</option>
-                          </select>
-                          <button 
-                            className="btn btn-sm btn-outline"
-                            onClick={() => openDialog(pkg)}
-                          >
-                            Details
-                          </button>
-                        </div>
+                      <td className="payment-cell">
+                        {pkg.paymentProof ? (
+                          <div className="payment-proof-info">
+                            <a 
+                              href={pkg.paymentProof} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="btn btn-sm btn-outline payment-link"
+                            >
+                              View Proof
+                            </a>
+                            {pkg.payment?.fileName && (
+                              <small className="file-name">{pkg.payment.fileName}</small>
+                            )}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
                       </td>
                     </tr>
                   );

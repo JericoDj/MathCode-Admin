@@ -218,7 +218,7 @@ export interface Tutor {
     date: string;
     time: string;
     duration: number; // Duration in minutes
-    status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending_payment' | 'approved'; // Expanded session status
+    status: 'scheduled' | 'completed' | 'cancelled' | 'no-show' | 'pending_payment' | 'approved' | "requested_assessment" ; // Expanded session status
     price: number;
     meetingLink?: string; // Optional meeting link
     notes?: string; // Optional notes field for Package details
