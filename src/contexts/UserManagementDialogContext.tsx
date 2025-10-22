@@ -1,5 +1,4 @@
-import React, { createContext, useContext } from 'react';
-import type { User } from '../types';
+import { createContext, useContext } from 'react';
 
 export type UserManagementDialogType = 'ADD_STUDENT' | 'EDIT_STUDENT' | 'LINK_PARENT';
 
