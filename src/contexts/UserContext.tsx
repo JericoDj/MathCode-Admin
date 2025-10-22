@@ -1,6 +1,6 @@
 // contexts/UserContext.tsx
-import React, { createContext, useContext } from 'react';
-import type { UserContextType, User, UpdateUserData } from '../types/user';
+import { createContext, useContext } from 'react';
+import type { UserContextType } from '../types/user';
 
 const defaultContextValue: UserContextType = {
   users: [],

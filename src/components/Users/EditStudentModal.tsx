@@ -1,5 +1,5 @@
 import React from 'react';
-import type { User, UpdateUserDTO } from '../../types/index';
+import type { User } from '../../types/index';
 interface EditStudentModalProps {
   student: User;
   setStudent: React.Dispatch<React.SetStateAction<User | null>>;

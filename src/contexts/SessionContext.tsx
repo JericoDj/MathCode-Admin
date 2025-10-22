@@ -1,5 +1,5 @@
 // contexts/SessionContext.tsx
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 import type { Session } from '../pages/AdminPage/Sessions/SessionsManagement';
 
 export interface CreateSessionData {

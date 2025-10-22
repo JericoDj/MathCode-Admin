@@ -63,7 +63,7 @@ export const PackageManagement: React.FC = () => {
   const [packageTypeUpdates, setPackageTypeUpdates] = useState<Record<string, { type: string; duration: string }>>({});
   const [priceUpdates, setPriceUpdates] = useState<Record<string, string>>({});
   const [statusUpdates, setStatusUpdates] = useState<Record<string, string>>({});
-  const isAdmin = true;
+
 
   useEffect(() => {
     getPackages();

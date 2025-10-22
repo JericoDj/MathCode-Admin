@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import "./PackageDialog.css";
 import { PackageContext } from "../../contexts/PackageContext";
 import type { Package } from "../../types";
