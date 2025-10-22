@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { CreateSessionModal } from './CreateSessionModal';
 import { SessionDetailsModal } from './SessionDetailsModal';
+import { EditSessionModal } from './EditSessionModal';
 import { useSession } from '../../../contexts/SessionContext';
+
 import './SessionsManagement.css';
 import './ModalShared.css';
 
@@ -21,45 +23,44 @@ export interface Session {
   notes?: string;
   meetingLink?: string;
   materials?: string[];
+  sessionNotes?: string;
+  rating?: number;
+  feedback?: string;
+  actualStartTime?: string;
+  actualEndTime?: string;
 }
 
 export const SessionsManagement: React.FC = () => {
-  const { sessions, isLoading, error, refreshSessions, updateSessionStatus } = useSession();
+  const { sessions, isLoading, error, refreshSessions, updateSessionStatus, deleteSession } = useSession();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [activeView, setActiveView] = useState<'calendar' | 'list'>('list');
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [currentWeek, setCurrentWeek] = useState<Date>(() => {
-    // Start with today's date, not hardcoded to 2025
-    return new Date();
+    return new Date(2025, 9, 20);
   });
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Refresh sessions when component mounts
   useEffect(() => {
     refreshSessions();
   }, []);
 
-  // Auto-adjust calendar to show weeks with sessions when switching to calendar view
   useEffect(() => {
     if (sessions.length > 0 && activeView === 'calendar') {
-      // Check if current week has any sessions
-      const currentWeekHasSessions = sessions.some(session => {
-        const sessionDate = new Date(session.date);
-        const isInCurrentWeek = weekDates.some(weekDate => {
-          return getFormattedDate(weekDate) === getFormattedDate(sessionDate);
-        });
-        return isInCurrentWeek;
-      });
-
-      // If current week has no sessions, jump to the week with the nearest session
-      if (!currentWeekHasSessions) {
-        goToNearestSessionWeek();
-      }
+      const sessionDates = sessions.map(s => new Date(s.date));
+      const earliestDate = new Date(Math.min(...sessionDates.map(d => d.getTime())));
+      
+      const startOfWeek = new Date(earliestDate);
+      const day = startOfWeek.getDay();
+      const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+      startOfWeek.setDate(diff);
+      
+      setCurrentWeek(startOfWeek);
     }
   }, [sessions, activeView]);
 
-  // Helper function to format date as YYYY-MM-DD
   function getFormattedDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -67,7 +68,6 @@ export const SessionsManagement: React.FC = () => {
     return `${year}-${month}-${day}`;
   }
 
-  // Get the current week's dates
   const getWeekDates = (date: Date) => {
     const startOfWeek = new Date(date);
     const day = startOfWeek.getDay();
@@ -85,7 +85,6 @@ export const SessionsManagement: React.FC = () => {
 
   const weekDates = getWeekDates(currentWeek);
 
-  // Navigate weeks
   const goToPreviousWeek = () => {
     setCurrentWeek(prev => {
       const newDate = new Date(prev);
@@ -106,54 +105,12 @@ export const SessionsManagement: React.FC = () => {
     setCurrentWeek(new Date());
   };
 
-  const goToNearestSessionWeek = () => {
-    if (sessions.length > 0) {
-      const today = new Date();
-      
-      // Find sessions and calculate how far they are from today
-      const sessionsWithDistance = sessions.map(session => {
-        const sessionDate = new Date(session.date);
-        const distance = Math.abs(sessionDate.getTime() - today.getTime());
-        return { session, distance, date: sessionDate };
-      });
-      
-      // Sort by distance (closest first)
-      sessionsWithDistance.sort((a, b) => a.distance - b.distance);
-      
-      // Get the closest session date
-      const closestSessionDate = sessionsWithDistance[0].date;
-      
-      // Set current week to the week containing the closest session
-      const startOfWeek = new Date(closestSessionDate);
-      const day = startOfWeek.getDay();
-      const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-      startOfWeek.setDate(diff);
-      
-      setCurrentWeek(startOfWeek);
-    }
-  };
-
   const goToSessionsWeek = () => {
     if (sessions.length > 0) {
-      // Find the earliest upcoming session, or if none, the most recent session
-      const today = new Date();
-      const upcomingSessions = sessions.filter(session => new Date(session.date) >= today);
+      const sessionDates = sessions.map(s => new Date(s.date));
+      const earliestDate = new Date(Math.min(...sessionDates.map(d => d.getTime())));
       
-      let targetSession;
-      if (upcomingSessions.length > 0) {
-        // Use the earliest upcoming session
-        targetSession = upcomingSessions.reduce((earliest, session) => {
-          return new Date(session.date) < new Date(earliest.date) ? session : earliest;
-        });
-      } else {
-        // Use the most recent session if no upcoming sessions
-        targetSession = sessions.reduce((latest, session) => {
-          return new Date(session.date) > new Date(latest.date) ? session : latest;
-        });
-      }
-      
-      const sessionDate = new Date(targetSession.date);
-      const startOfWeek = new Date(sessionDate);
+      const startOfWeek = new Date(earliestDate);
       const day = startOfWeek.getDay();
       const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
       startOfWeek.setDate(diff);
@@ -162,7 +119,6 @@ export const SessionsManagement: React.FC = () => {
     }
   };
 
-  // Filter sessions for the current view
   const filteredSessions = sessions.filter(session => {
     const matchesStatus = filterStatus === 'all' || session.status === filterStatus;
     const matchesSearch = session.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -180,7 +136,6 @@ export const SessionsManagement: React.FC = () => {
     return matchesStatus && matchesSearch;
   });
 
-  // Group sessions by date for calendar view
   const sessionsByDate = filteredSessions.reduce((acc, session) => {
     const dateKey = getFormattedDate(new Date(session.date));
     if (!acc[dateKey]) {
@@ -202,7 +157,9 @@ export const SessionsManagement: React.FC = () => {
   };
 
   const handleCreateSession = (newSession: Omit<Session, 'id'>) => {
+    console.log('✅ New session created:', newSession);
     setIsCreateModalOpen(false);
+    refreshSessions();
   };
 
   const handleStatusChange = async (sessionId: string, newStatus: Session['status']) => {
@@ -212,10 +169,44 @@ export const SessionsManagement: React.FC = () => {
         return;
       }
       
+      setActionLoading(sessionId);
       await updateSessionStatus(sessionId, newStatus);
+      await refreshSessions();
     } catch (error) {
       console.error('Failed to update session status:', error);
+      alert('Failed to update session status. Please try again.');
+    } finally {
+      setActionLoading(null);
     }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!window.confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setActionLoading(sessionId);
+      await deleteSession(sessionId);
+      await refreshSessions();
+      setSelectedSession(null);
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      alert('Failed to delete session. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleEditSession = (session: Session) => {
+    setEditingSession(session);
+    setSelectedSession(null);
+  };
+
+  const handleUpdateSession = (updatedSession: Session) => {
+    refreshSessions();
+    setEditingSession(null);
+    setSelectedSession(updatedSession);
   };
 
   const formatTimeDisplay = (time: string) => {
@@ -230,17 +221,17 @@ export const SessionsManagement: React.FC = () => {
     return getFormattedDate(date) === getFormattedDate(today);
   };
 
-  // Check if current week has any sessions
-  const currentWeekHasSessions = sessions.some(session => {
-    const sessionDate = new Date(session.date);
-    return weekDates.some(weekDate => {
-      return getFormattedDate(weekDate) === getFormattedDate(sessionDate);
-    });
-  });
+  const getStatusOptions = (currentStatus: Session['status']) => {
+    const allStatuses: Session['status'][] = ['scheduled', 'in-progress', 'completed', 'cancelled', 'no-show'];
+    return allStatuses.filter(status => status !== currentStatus);
+  };
+
+  const getStatusDisplayName = (status: Session['status']) => {
+    return status.replace('-', ' ').toUpperCase();
+  };
 
   return (
     <div className="sessions-management">
-      {/* Header */}
       <div className="sessions-header">
         <div className="header-left">
           <h1 className="page-title">Session Management</h1>
@@ -248,9 +239,6 @@ export const SessionsManagement: React.FC = () => {
           {activeView === 'calendar' && (
             <div className="current-week-info">
               Week of {weekDates[0].toLocaleDateString()} to {weekDates[6].toLocaleDateString()}
-              {!currentWeekHasSessions && sessions.length > 0 && (
-                <span className="no-sessions-hint"> (No sessions this week)</span>
-              )}
             </div>
           )}
         </div>
@@ -263,23 +251,13 @@ export const SessionsManagement: React.FC = () => {
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </button>
           {activeView === 'calendar' && (
-            <>
-              <button
-                className="btn btn-secondary"
-                onClick={goToSessionsWeek}
-                disabled={sessions.length === 0}
-              >
-                Jump to Sessions
-              </button>
-              {!currentWeekHasSessions && sessions.length > 0 && (
-                <button
-                  className="btn btn-text"
-                  onClick={goToNearestSessionWeek}
-                >
-                  Find Nearest Session
-                </button>
-              )}
-            </>
+            <button
+              className="btn btn-secondary"
+              onClick={goToSessionsWeek}
+              disabled={sessions.length === 0}
+            >
+              Jump to Sessions
+            </button>
           )}
           <button
             className="btn btn-primary"
@@ -291,14 +269,12 @@ export const SessionsManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className="error-banner">
           <span className="error-message">{error}</span>
         </div>
       )}
 
-      {/* Loading State */}
       {isLoading && sessions.length === 0 && (
         <div className="loading-state">
           <div className="loading-spinner"></div>
@@ -306,7 +282,6 @@ export const SessionsManagement: React.FC = () => {
         </div>
       )}
 
-      {/* View Toggle */}
       {!isLoading && (
         <div className="view-toggle">
           <button
@@ -324,10 +299,8 @@ export const SessionsManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Calendar View */}
       {!isLoading && activeView === 'calendar' && (
         <>
-          {/* Week Navigation */}
           <div className="week-navigation">
             <button className="btn btn-secondary" onClick={goToPreviousWeek}>
               ← Previous Week
@@ -346,7 +319,6 @@ export const SessionsManagement: React.FC = () => {
             </span>
           </div>
 
-          {/* Calendar Grid */}
           <div className="calendar-grid">
             {weekDates.map((date, index) => {
               const dateKey = getFormattedDate(date);
@@ -406,10 +378,8 @@ export const SessionsManagement: React.FC = () => {
         </>
       )}
 
-      {/* List View */}
       {!isLoading && activeView === 'list' && (
         <>
-          {/* Filters and Search */}
           <div className="sessions-controls">
             <div className="search-box">
               <input
@@ -436,12 +406,10 @@ export const SessionsManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Sessions Count */}
           <div className="sessions-count">
             Showing {filteredSessions.length} of {sessions.length} sessions
           </div>
 
-          {/* Sessions Grid */}
           <div className="sessions-grid">
             {filteredSessions.map(session => (
               <div key={session.id} className="session-card">
@@ -452,15 +420,23 @@ export const SessionsManagement: React.FC = () => {
                       className="status-badge"
                       style={{ backgroundColor: getStatusColor(session.status) }}
                     >
-                      {session.status.replace('-', ' ').toUpperCase()}
+                      {getStatusDisplayName(session.status)}
                     </span>
                   </div>
-                  <button
-                    className="btn btn-text"
-                    onClick={() => setSelectedSession(session)}
-                  >
-                    View Details
-                  </button>
+                  <div className="session-actions-header">
+                    <button
+                      className="btn btn-text"
+                      onClick={() => handleEditSession(session)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-text"
+                      onClick={() => setSelectedSession(session)}
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
 
                 <div className="session-info">
@@ -489,30 +465,24 @@ export const SessionsManagement: React.FC = () => {
                 </div>
 
                 <div className="session-actions">
-                  {session.status === 'scheduled' && (
-                    <>
-                      <button
-                        className="btn btn-success btn-sm"
-                        onClick={() => handleStatusChange(session.id, 'in-progress')}
-                      >
-                        Start Session
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleStatusChange(session.id, 'cancelled')}
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
-                  {session.status === 'in-progress' && (
-                    <button
-                      className="btn btn-success btn-sm"
-                      onClick={() => handleStatusChange(session.id, 'completed')}
-                    >
-                      Complete Session
-                    </button>
-                  )}
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleStatusChange(session.id, e.target.value as Session['status']);
+                      }
+                    }}
+                    disabled={actionLoading === session.id}
+                    className="status-select"
+                  >
+                    <option value="">Change Status</option>
+                    {getStatusOptions(session.status).map(status => (
+                      <option key={status} value={status}>
+                        {getStatusDisplayName(status)}
+                      </option>
+                    ))}
+                  </select>
+
                   {session.meetingLink && (
                     <a
                       href={session.meetingLink}
@@ -523,12 +493,27 @@ export const SessionsManagement: React.FC = () => {
                       Join Meeting
                     </a>
                   )}
+
+                  {session.status !== 'in-progress' && (
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDeleteSession(session.id)}
+                      disabled={actionLoading === session.id}
+                    >
+                      {actionLoading === session.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
                 </div>
+
+                {actionLoading === session.id && (
+                  <div className="action-loading">
+                    <div className="loading-spinner small"></div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
-          {/* Empty State */}
           {filteredSessions.length === 0 && (
             <div className="empty-state">
               <h3>No sessions found</h3>
@@ -546,8 +531,8 @@ export const SessionsManagement: React.FC = () => {
         </>
       )}
 
-      {/* Modals */}
       <CreateSessionModal
+        key={isCreateModalOpen ? "create-modal-open" : "create-modal-closed"}
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateSession}
@@ -557,6 +542,16 @@ export const SessionsManagement: React.FC = () => {
         session={selectedSession}
         onClose={() => setSelectedSession(null)}
         onStatusChange={handleStatusChange}
+        onDelete={handleDeleteSession}
+        onEdit={handleEditSession}
+        isLoading={actionLoading === selectedSession?.id}
+      />
+
+      <EditSessionModal
+        session={editingSession}
+        isOpen={!!editingSession}
+        onClose={() => setEditingSession(null)}
+        onUpdate={handleUpdateSession}
       />
     </div>
   );

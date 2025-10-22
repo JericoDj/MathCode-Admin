@@ -30,7 +30,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const createSession = async (sessionData: CreateSessionData): Promise<Session> => {
     try {
-      setIsLoading(true);
+      // Don't set global isLoading for individual operations
       setError(null);
       
       const newSession = await sessionAPI.createSession(sessionData);
@@ -44,8 +44,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const errorMessage = err instanceof Error ? err.message : 'Failed to create session';
       setError(errorMessage);
       throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -55,7 +53,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Invalid session ID');
       }
 
-      setIsLoading(true);
       setError(null);
       
       const updatedSession = await sessionAPI.updateSession(sessionId, updateData);
@@ -71,8 +68,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const errorMessage = err instanceof Error ? err.message : 'Failed to update session';
       setError(errorMessage);
       throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -82,7 +77,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Invalid session ID');
       }
 
-      setIsLoading(true);
       setError(null);
       
       await sessionAPI.deleteSession(sessionId);
@@ -94,8 +88,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete session';
       setError(errorMessage);
       throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -105,7 +97,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Invalid session ID');
       }
 
-      setIsLoading(true);
       setError(null);
       
       const updatedSession = await sessionAPI.updateSessionStatus(sessionId, status);
@@ -121,8 +112,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const errorMessage = err instanceof Error ? err.message : 'Failed to update session status';
       setError(errorMessage);
       throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -132,7 +121,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Invalid session ID');
       }
 
-      setIsLoading(true);
       setError(null);
       
       const session = await sessionAPI.getSession(sessionId);
@@ -142,8 +130,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const errorMessage = err instanceof Error ? err.message : 'Failed to get session';
       setError(errorMessage);
       throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 

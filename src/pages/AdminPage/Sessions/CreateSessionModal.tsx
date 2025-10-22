@@ -1,9 +1,10 @@
 // pages/AdminPage/Sessions/CreateSessionModal.tsx
 import React, { useState, useEffect } from 'react';
 import { useSession } from '../../../contexts/SessionContext';
+import { useUser } from '../../../contexts/UserContext'; // Import the user context
 import type { Session } from './SessionsManagement';
-import './ModalShared.css';
 import './CreateSessionModal.css';
+
 
 interface CreateSessionModalProps {
   isOpen: boolean;
@@ -19,10 +20,6 @@ interface User {
   phone: string;
   roles: string[];
   credits?: number;
-  guardianOf?: string[];
-  profile?: {
-    timezone: string;
-  };
 }
 
 export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
@@ -30,13 +27,18 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
   onClose,
   onCreate
 }) => {
-  const { createSession, isLoading: contextLoading } = useSession();
+  const { createSession } = useSession();
   const [students, setStudents] = useState<User[]>([]);
   const [parents, setParents] = useState<User[]>([]);
+  
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<User | null>(null);
   const [selectedParent, setSelectedParent] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+
+      const { getUser, updateUser } = useUser();
 
   const [formData, setFormData] = useState({
     studentId: '',
@@ -52,31 +54,38 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
     meetingLink: ''
   });
 
-  // Load students and parents when modal opens
+  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
+      console.log('🔄 CreateSessionModal opened - resetting form');
+      resetForm();
       loadUsers();
-      setError(null);
-      // Reset form when modal opens
-      setFormData({
-        studentId: '',
-        parentId: '',
-        tutorName: '',
-        subject: '',
-        date: '',
-        time: '',
-        duration: 60,
-        status: 'scheduled',
-        packageType: '1:1 Private Tutoring',
-        notes: '',
-        meetingLink: ''
-      });
-      setSelectedStudent(null);
-      setSelectedParent(null);
     }
   }, [isOpen]);
 
+  const resetForm = () => {
+    setFormData({
+      studentId: '',
+      parentId: '',
+      tutorName: '',
+      subject: '',
+      date: '',
+      time: '',
+      duration: 60,
+      status: 'scheduled',
+      packageType: '1:1 Private Tutoring',
+      notes: '',
+      meetingLink: ''
+    });
+    setSelectedStudent(null);
+    setSelectedParent(null);
+    setError(null);
+    setIsSubmitting(false);
+  };
+
   const loadUsers = async () => {
+    if (!isOpen) return;
+    
     try {
       setIsLoading(true);
       const token = localStorage.getItem('adminToken');
@@ -86,7 +95,9 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
         return;
       }
 
-      // Load students and parents in parallel
+      console.log('📡 Loading users from API...');
+
+      // Load students and parents
       const [studentsResponse, parentsResponse] = await Promise.all([
         fetch('http://localhost:4000/api/users?role=student', {
           headers: {
@@ -102,84 +113,160 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
         })
       ]);
 
-      if (!studentsResponse.ok || !parentsResponse.ok) {
-        throw new Error('Failed to load users');
+      if (!studentsResponse.ok) {
+        throw new Error(`Failed to load students: ${studentsResponse.status}`);
+      }
+      if (!parentsResponse.ok) {
+        throw new Error(`Failed to load parents: ${parentsResponse.status}`);
       }
 
       const studentsData = await studentsResponse.json();
       const parentsData = await parentsResponse.json();
 
-      setStudents(studentsData.items || studentsData);
-      setParents(parentsData.items || parentsData);
+      console.log('📊 Students data:', studentsData);
+      console.log('📊 Parents data:', parentsData);
+
+      // Handle different response formats
+      const studentsList = studentsData.items || studentsData || [];
+      const parentsList = parentsData.items || parentsData || [];
+
+      setStudents(studentsList);
+      setParents(parentsList);
+
+      console.log(`✅ Loaded ${studentsList.length} students and ${parentsList.length} parents`);
 
     } catch (error) {
-      console.error('Error loading users:', error);
-      setError('Failed to load users. Please try again.');
-      // For demo purposes, create mock data
-      setStudents(getMockStudents());
-      setParents(getMockParents());
+      console.error('❌ Error loading users:', error);
+      setError(`Failed to load users: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Use mock data as fallback
+      console.log('🔄 Using mock data as fallback');
+      const mockStudents = getMockStudents();
+      const mockParents = getMockParents();
+      setStudents(mockStudents);
+      setParents(mockParents);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  e.preventDefault();
+  setError(null);
+  
+  if (!isFormValid()) {
+    setError('Please fill in all required fields (*)');
+    return;
+  }
+  
+  setIsSubmitting(true);
+  
+  let creditsDeducted = false;
+  let originalCredits = 0;
+  const creditsNeeded = calculateCredits(formData.duration);
+  
+  try {
+    const student = students.find(s => s._id === formData.studentId);
+    const parent = parents.find(p => p._id === formData.parentId);
     
-    try {
-      // Get student and parent names from selected IDs
-      const student = students.find(s => s._id === formData.studentId);
-      const parent = parents.find(p => p._id === formData.parentId);
-      
-      if (!student || !parent) {
-        setError('Please select both student and parent');
+    if (!student) {
+      setError('Please select a student');
+      return;
+    }
+    
+    if (!parent) {
+      setError('Please select a parent');
+      return;
+    }
+
+    // Check and deduct credits
+
+    const currentParent = await getUser(formData.parentId);
+    originalCredits = currentParent.credits || 0;
+    
+    console.log(`💰 Credit Check - Parent: ${currentParent.firstName} ${currentParent.lastName}`);
+    console.log(`💰 Current Credits: ${originalCredits}, Needed: ${creditsNeeded}`);
+    
+    if (originalCredits < creditsNeeded) {
+      setError(`Insufficient credits. Parent has ${originalCredits} credits but ${creditsNeeded} credits are needed for this session.`);
+      return;
+    }
+    
+    // Deduct credits
+    const updatedCredits = originalCredits - creditsNeeded;
+    await updateUser(formData.parentId, { credits: updatedCredits });
+    creditsDeducted = true;
+    console.log('✅ Credits deducted successfully');
+
+    // Create session
+    const sessionData = {
+      studentId: formData.studentId,
+      parentId: formData.parentId,
+      studentName: `${student.firstName} ${student.lastName}`,
+      parentName: `${parent.firstName} ${parent.lastName}`,
+      tutorName: formData.tutorName.trim(),
+      subject: formData.subject.trim(),
+      date: formData.date,
+      time: formData.time,
+      duration: formData.duration,
+      status: formData.status,
+      packageType: formData.packageType,
+      notes: formData.notes.trim(),
+      meetingLink: formData.meetingLink.trim(),
+      creditsUsed: creditsNeeded
+    };
+    
+    console.log('📝 Creating session with data:', sessionData);
+    const newSession = await createSession(sessionData);
+    console.log('✅ Session created successfully:', newSession);
+    
+    onCreate(newSession);
+    onClose();
+    
+  } catch (err) {
+    console.error('❌ Failed to create session:', err);
+    
+    // Rollback credit deduction if session creation failed
+    if (creditsDeducted) {
+      try {
+        console.log('🔄 Rolling back credit deduction...');
+        const { updateUser } = useUser();
+        await updateUser(formData.parentId, { credits: originalCredits });
+        console.log('✅ Credits restored successfully');
+      } catch (rollbackError) {
+        console.error('❌ Failed to rollback credits:', rollbackError);
+        setError(`Session creation failed and credits could not be restored. Please contact support. Original error: ${err instanceof Error ? err.message : 'Unknown error'}`);
         return;
       }
-
-      const sessionData = {
-        studentId: formData.studentId,
-        parentId: formData.parentId,
-        studentName: `${student.firstName} ${student.lastName}`,
-        parentName: `${parent.firstName} ${parent.lastName}`,
-        tutorName: formData.tutorName,
-        subject: formData.subject,
-        date: formData.date,
-        time: formData.time,
-        duration: formData.duration,
-        status: formData.status,
-        packageType: formData.packageType,
-        notes: formData.notes,
-        meetingLink: formData.meetingLink
-      };
-      
-      // Use the context to create session
-      const newSession = await createSession(sessionData);
-      
-      // Also call the old onCreate for backward compatibility
-      onCreate(newSession);
-      
-      onClose(); // Close modal on success
-      
-    } catch (err) {
-      console.error('Failed to create session:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create session');
     }
-  };
+    
+    const errorMessage = err instanceof Error ? err.message : 'Failed to create session';
+    setError(errorMessage);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleInputChange = (field: string, value: string | number) => {
+    console.log(`Input change - ${field}:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Update selected student/parent when IDs change
     if (field === 'studentId') {
       const student = students.find(s => s._id === value) || null;
+      console.log('Selected student updated:', student);
       setSelectedStudent(student);
     }
     
     if (field === 'parentId') {
       const parent = parents.find(p => p._id === value) || null;
+      console.log('Selected parent updated:', parent);
       setSelectedParent(parent);
     }
+  };
+
+  const calculateCredits = (duration: number): number => {
+    return duration / 60; // 1 credit per hour
   };
 
   // Generate time slots in 30-minute intervals
@@ -203,22 +290,47 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
   };
 
   const isFormValid = () => {
-    return formData.studentId && 
+    const isValid = formData.studentId && 
            formData.parentId && 
-           formData.tutorName &&
-           formData.subject && 
+           formData.tutorName.trim() &&
+           formData.subject.trim() && 
            formData.date && 
            formData.time;
+    
+    console.log('Form validation:', isValid, {
+      studentId: !!formData.studentId,
+      parentId: !!formData.parentId,
+      tutorName: !!formData.tutorName.trim(),
+      subject: !!formData.subject.trim(),
+      date: !!formData.date,
+      time: !!formData.time
+    });
+    
+    return isValid;
   };
 
+  const handleClose = () => {
+    console.log('🔒 Closing modal');
+    resetForm();
+    onClose();
+  };
+
+  // Don't render if modal is not open
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content create-session" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Create New Session</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button 
+            className="modal-close" 
+            onClick={handleClose}
+            disabled={isSubmitting}
+            type="button"
+          >
+            ×
+          </button>
         </div>
 
         {/* Error Display */}
@@ -241,7 +353,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                   value={formData.studentId}
                   onChange={(e) => handleInputChange('studentId', e.target.value)}
                   required
-                  disabled={contextLoading}
+                  disabled={isSubmitting}
                 >
                   <option value="">Select a student</option>
                   {students.map(student => (
@@ -263,7 +375,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                   value={formData.parentId}
                   onChange={(e) => handleInputChange('parentId', e.target.value)}
                   required
-                  disabled={contextLoading}
+                  disabled={isSubmitting}
                 >
                   <option value="">Select a parent</option>
                   {parents.map(parent => (
@@ -309,7 +421,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                 onChange={(e) => handleInputChange('tutorName', e.target.value)}
                 placeholder="Enter tutor name"
                 required
-                disabled={contextLoading}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -321,7 +433,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                 onChange={(e) => handleInputChange('subject', e.target.value)}
                 placeholder="e.g., Math, Science, English"
                 required
-                disabled={contextLoading}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -333,7 +445,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                 onChange={(e) => handleInputChange('date', e.target.value)}
                 min={getMinDate()}
                 required
-                disabled={contextLoading}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -343,7 +455,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                 value={formData.time}
                 onChange={(e) => handleInputChange('time', e.target.value)}
                 required
-                disabled={contextLoading}
+                disabled={isSubmitting}
               >
                 <option value="">Select time</option>
                 {timeSlots.map(time => (
@@ -360,13 +472,16 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                 value={formData.duration}
                 onChange={(e) => handleInputChange('duration', parseInt(e.target.value))}
                 required
-                disabled={contextLoading}
+                disabled={isSubmitting}
               >
                 <option value={30}>30 minutes (0.5 credits)</option>
                 <option value={60}>60 minutes (1 credit)</option>
                 <option value={90}>90 minutes (1.5 credits)</option>
                 <option value={120}>120 minutes (2 credits)</option>
               </select>
+              <div className="credits-display">
+                Credits: {calculateCredits(formData.duration)}
+              </div>
             </div>
 
             <div className="form-group">
@@ -374,7 +489,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
               <select
                 value={formData.status}
                 onChange={(e) => handleInputChange('status', e.target.value as Session['status'])}
-                disabled={contextLoading}
+                disabled={isSubmitting}
               >
                 <option value="scheduled">Scheduled</option>
                 <option value="in-progress">In Progress</option>
@@ -389,7 +504,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
               <select
                 value={formData.packageType}
                 onChange={(e) => handleInputChange('packageType', e.target.value)}
-                disabled={contextLoading}
+                disabled={isSubmitting}
               >
                 <option value="1:1 Private Tutoring">1:1 Private Tutoring</option>
                 <option value="1:2 Small Group">1:2 Small Group</option>
@@ -404,7 +519,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                 value={formData.meetingLink}
                 onChange={(e) => handleInputChange('meetingLink', e.target.value)}
                 placeholder="https://meet.google.com/..."
-                disabled={contextLoading}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -415,7 +530,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 rows={3}
                 placeholder="Any special instructions or notes for the session..."
-                disabled={contextLoading}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -423,18 +538,18 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
           <div className="modal-actions">
             <button 
               type="button" 
-              onClick={onClose} 
+              onClick={handleClose} 
               className="btn btn-secondary"
-              disabled={contextLoading}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button 
               type="submit" 
               className="btn btn-primary"
-              disabled={!isFormValid() || contextLoading}
+              disabled={!isFormValid() || isSubmitting}
             >
-              {contextLoading ? (
+              {isSubmitting ? (
                 <>
                   <span className="loading-spinner"></span>
                   Creating...
@@ -478,6 +593,15 @@ function getMockStudents(): User[] {
       phone: '+1234567891',
       roles: ['student'],
       credits: 5
+    },
+    {
+      _id: 'student3',
+      firstName: 'Michael',
+      lastName: 'Brown',
+      email: 'michael.brown@example.com',
+      phone: '+1234567892',
+      roles: ['student'],
+      credits: 8
     }
   ];
 }
@@ -489,7 +613,7 @@ function getMockParents(): User[] {
       firstName: 'Sarah',
       lastName: 'Smith',
       email: 'sarah.smith@example.com',
-      phone: '+1234567892',
+      phone: '+1234567893',
       roles: ['parent'],
       credits: 10
     },
@@ -498,9 +622,18 @@ function getMockParents(): User[] {
       firstName: 'Mike',
       lastName: 'Johnson',
       email: 'mike.johnson@example.com',
-      phone: '+1234567893',
+      phone: '+1234567894',
       roles: ['parent'],
       credits: 5
+    },
+    {
+      _id: 'parent3',
+      firstName: 'Lisa',
+      lastName: 'Brown',
+      email: 'lisa.brown@example.com',
+      phone: '+1234567895',
+      roles: ['parent'],
+      credits: 8
     }
   ];
 }

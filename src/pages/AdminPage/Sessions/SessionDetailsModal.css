@@ -1,46 +1,247 @@
 /* pages/AdminPage/Sessions/SessionDetailsModal.css */
 
-/* ===== SESSION DETAILS ===== */
+/* ===== SESSION DETAILS MODAL ===== */
 .session-details {
-  padding: 1.5rem;
+  padding: 0;
+  max-height: calc(90vh - 80px);
+  overflow-y: auto;
 }
 
 .details-section {
-  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.details-section:last-child {
+  border-bottom: none;
 }
 
 .details-section h3 {
-  margin: 0 0 1rem 0;
-  color: #1f2937;
+  margin: 0 0 1.25rem 0;
+  color: #1e293b;
   font-size: 1.125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.details-section h3::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  border-radius: 2px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  margin-bottom: 0;
 }
 
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.25rem;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s;
+}
+
+.detail-item:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
 }
 
 .detail-item label {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-item span {
+  color: #1e293b;
   font-weight: 500;
-  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.detail-item a {
+  color: #3b82f6;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+  word-break: break-all;
+}
+
+.detail-item a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.meeting-link {
+  padding: 0.75rem 1rem;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.5rem;
+  display: block;
+  transition: all 0.2s;
+}
+
+.meeting-link:hover {
+  background: #dbeafe;
+  text-decoration: none;
+}
+
+/* ===== NOTES & CONTENT SECTIONS ===== */
+.notes-content,
+.feedback-content {
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.rating {
+  color: #f59e0b;
+  font-size: 1.125rem;
+  letter-spacing: 0.125em;
+}
+
+/* ===== MANAGEMENT ACTIONS ===== */
+.management-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.status-update-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.status-update-section label {
+  font-weight: 600;
+  color: #374151;
   font-size: 0.875rem;
 }
 
-.detail-item span,
-.detail-item a {
-  color: #1f2937;
-  font-weight: 500;
+.status-update-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
+.status-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  background: white;
+  min-width: 200px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.danger-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ===== ACTION BUTTONS ===== */
 .action-buttons {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .details-section {
+    padding: 1.25rem;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .detail-item {
+    padding: 0.875rem;
+  }
+  
+  .status-update-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .status-select {
+    min-width: auto;
+  }
+  
+  .danger-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .management-actions {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .details-section {
+    padding: 1rem;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
