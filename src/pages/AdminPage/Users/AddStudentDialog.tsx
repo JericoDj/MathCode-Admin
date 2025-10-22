@@ -88,3 +88,4 @@ export const AddStudentDialog: React.FC<AddStudentDialogProps> = ({ student, onC
     </div>
   );
 };
+
