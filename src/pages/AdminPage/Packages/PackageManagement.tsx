@@ -58,11 +58,17 @@ export const PackageManagement: React.FC = () => {
   const [editingPackageRows, setEditingPackageRows] = useState<Record<string, boolean>>({});
   const [editingPriceRows, setEditingPriceRows] = useState<Record<string, boolean>>({});
   const [editingStatusRows, setEditingStatusRows] = useState<Record<string, boolean>>({});
+  
+  const [editingTutorRows, setEditingTutorRows] = useState<Record<string, boolean>>({});
+const [tutorUpdates, setTutorUpdates] = useState<Record<string, string>>({});
+  
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [updatingPackageId, setUpdatingPackageId] = useState<string | null>(null);
   const [packageTypeUpdates, setPackageTypeUpdates] = useState<Record<string, { type: string; duration: string }>>({});
   const [priceUpdates, setPriceUpdates] = useState<Record<string, string>>({});
   const [statusUpdates, setStatusUpdates] = useState<Record<string, string>>({});
+
+  
 
 
   useEffect(() => {
@@ -326,6 +332,8 @@ export const PackageManagement: React.FC = () => {
     }
   };
 
+  
+
   // Get available package durations based on package type
   const getPackageDurations = (packageType: string): string[] => {
     return Object.keys(pricingData[packageType as keyof PricingData]?.plans || {});
@@ -336,6 +344,7 @@ export const PackageManagement: React.FC = () => {
     if (pkg.price) {
       return `₱${pkg.price.toLocaleString()}`;
     }
+
     
     // Try to get price from package type and duration
     if (pkg.packageType && pkg.packageDuration) {
@@ -347,6 +356,52 @@ export const PackageManagement: React.FC = () => {
     
     return "-";
   };
+
+  // ---- Tutor Editing ----
+const handleEditTutor = (pid: string): void => {
+  setEditingTutorRows(prev => ({ ...prev, [pid]: true }));
+  const current = packages.find((x: Package) => (x.id || x._id) === pid);
+  setTutorUpdates(prev => ({
+    ...prev,
+    [pid]: current?.tutorName || ""
+  }));
+};
+
+const handleCancelTutorEdit = (pid: string): void => {
+  setEditingTutorRows(prev => ({ ...prev, [pid]: false }));
+  setTutorUpdates(prev => {
+    const next = { ...prev };
+    delete next[pid];
+    return next;
+  });
+};
+
+const handleTutorChange = (pid: string, value: string): void => {
+  setTutorUpdates(prev => ({
+    ...prev,
+    [pid]: value
+  }));
+};
+
+const handleSaveTutor = async (pid: string): Promise<void> => {
+  const newTutor = tutorUpdates[pid];
+  if (!newTutor) return;
+
+  setUpdatingPackageId(pid);
+  try {
+    await updatePackage(pid, { tutorName: newTutor });
+    setEditingTutorRows(prev => ({ ...prev, [pid]: false }));
+    await getPackages();
+  } catch (err) {
+    console.error("Failed to update tutor:", err);
+  } finally {
+    setUpdatingPackageId(null);
+  }
+};
+
+
+
+
 
   if (isLoading) {
     return (
@@ -506,8 +561,52 @@ export const PackageManagement: React.FC = () => {
                         <strong>{studentName}</strong>
                       </td>
                       <td className="teacher-cell">
-                        {pkg.tutorName || <span className="not-assigned">Not Assigned</span>}
-                      </td>
+  {!editingTutorRows[pid] ? (
+    <div className="tutor-display">
+      {pkg.tutorName ? (
+        <strong>{pkg.tutorName}</strong>
+      ) : (
+        <span className="not-assigned">Not Assigned</span>
+      )}
+
+      <button
+        className="btn btn-sm btn-outline tutor-edit-btn"
+        onClick={() => handleEditTutor(pid)}
+        disabled={isUpdating}
+      >
+        Edit
+      </button>
+    </div>
+  ) : (
+    <div className="tutor-editor">
+      <input
+        type="text"
+        className="tutor-input"
+        placeholder="Enter tutor name..."
+        value={tutorUpdates[pid] || ""}
+        onChange={(e) => handleTutorChange(pid, e.target.value)}
+        disabled={isUpdating}
+      />
+
+      <div className="tutor-edit-actions">
+        <button
+          className="btn btn-sm btn-success"
+          onClick={() => handleSaveTutor(pid)}
+          disabled={isUpdating || !tutorUpdates[pid]}
+        >
+          {isUpdating ? "Saving..." : "Save"}
+        </button>
+        <button
+          className="btn btn-sm btn-ghost"
+          onClick={() => handleCancelTutorEdit(pid)}
+          disabled={isUpdating}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+</td>
                       <td className="subject-cell">
                         <div className="subject-info">
                           <strong>{pkg.subject || "Assessment"}</strong>
