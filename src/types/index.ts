@@ -1,7 +1,8 @@
 // User - Complete user interface matching MongoDB schema
 export interface User {
   // Core identification
-  id: string;
+  id?: string;
+  _id?: string; // Optional backend-assigned ID
   email: string;
   firstName: string;
   lastName: string;

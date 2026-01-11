@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import type { User, CreateUserDTO, UpdateUserDTO } from '../../../types';
 import { adminAPI } from '../../../utils/auth.api.tsx';
+import { studentAPI } from '../../../utils/student.api';
 import { LoadingSpinner } from '../../../components/LoadingSpinner/LoadingSpinner';
+import { useStudentContext, } from "../../../contexts/StudentContext";
 
 import './UserManagement.css';
 
@@ -12,9 +14,11 @@ interface UserWithGuardians extends User {
 }
 
 export const UserManagement: React.FC = () => {
-  const [students, setStudents] = useState<UserWithGuardians[]>([]);
-  const [parents, setParents] = useState<User[]>([]);
+
+
+  const { students, parents, loading, refresh } = useStudentContext();
   const [admins, setAdmins] = useState<User[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -23,6 +27,9 @@ export const UserManagement: React.FC = () => {
   const [showLinkParent, setShowLinkParent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<User | null>(null);
   const [editingStudent, setEditingStudent] = useState<User | null>(null);
+
+
+
 
   // Form states
   const [newStudent, setNewStudent] = useState<CreateUserDTO>({
@@ -45,40 +52,40 @@ export const UserManagement: React.FC = () => {
     try {
       setIsLoading(true);
       console.log('Starting to load all users...');
-      
+
       const [studentsData, parentsData, adminsData] = await Promise.all([
         adminAPI.getUsersByRole('student'),
         adminAPI.getUsersByRole('parent'),
         adminAPI.getUsersByRole('admin')
       ]);
-      
+
       console.log('Raw data loaded:', {
         studentsCount: studentsData.length,
         parentsCount: parentsData.length,
         students: studentsData,
         parents: parentsData
       });
-      
+
       // Load updated student details with guardian information
       const studentsWithGuardians = await Promise.all(
         studentsData.map(async (student) => {
           try {
             console.log(`Processing student: ${student.firstName} ${student.lastName} (${student.id})`);
             console.log('Student original guardians:', student.guardians);
-            
-            const updatedStudent = await adminAPI.getUpdatedStudentDetails(student.id);
+
+            const updatedStudent = await adminAPI.getUpdatedStudentDetails(student.id!);
             console.log('Updated student response:', updatedStudent);
-            
+
             let guardianDetails: User[] = [];
-            
+
             // If the student has guardians, fetch their details
             if (updatedStudent.guardians && updatedStudent.guardians.length > 0) {
               console.log('Found guardians in updated student:', updatedStudent.guardians);
-              
+
               // Fetch details for the first guardian
               const updatedParent = await adminAPI.getParentDetails(updatedStudent.guardians[0]);
               console.log('Parent details fetched:', updatedParent);
-              
+
               // Transform the parent response to User type
               if (updatedParent) {
                 console.log('Creating guardian object from parent data');
@@ -87,7 +94,7 @@ export const UserManagement: React.FC = () => {
                   firstName: updatedParent.firstName,
                   lastName: updatedParent.lastName,
                   email: updatedParent.email,
-                  phone: updatedParent.phone, 
+                  phone: updatedParent.phone,
                   roles: updatedParent.roles,
                   status: updatedParent.status,
                   profile: updatedParent.profile || {},
@@ -101,9 +108,9 @@ export const UserManagement: React.FC = () => {
             } else {
               console.log('No guardians found in updated student data');
             }
-            
+
             console.log(`Final guardian details for ${student.firstName}:`, guardianDetails);
-            
+
             return {
               ...student,
               guardiansDetails: guardianDetails
@@ -117,11 +124,11 @@ export const UserManagement: React.FC = () => {
           }
         })
       );
-      
+
       console.log('Final students with guardians:', studentsWithGuardians);
-      
-      setStudents(studentsWithGuardians);
-      setParents(parentsData);
+
+
+
       setAdmins(adminsData);
     } catch (error) {
       console.error('Failed to load users:', error);
@@ -135,6 +142,7 @@ export const UserManagement: React.FC = () => {
     try {
       await adminAPI.createUser(newStudent);
       setShowAddStudent(false);
+
       setNewStudent({
         firstName: '',
         lastName: '',
@@ -144,7 +152,7 @@ export const UserManagement: React.FC = () => {
         status: 'active',
         profile: { timezone: 'Asia/Manila' }
       });
-      loadAllUsers();
+      await refresh();
     } catch (error) {
       console.error('Failed to create student:', error);
     }
@@ -153,7 +161,7 @@ export const UserManagement: React.FC = () => {
   const handleUpdateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStudent) return;
-    
+
     try {
       const updateData: UpdateUserDTO = {
         firstName: editingStudent.firstName,
@@ -164,8 +172,8 @@ export const UserManagement: React.FC = () => {
         status: editingStudent.status,
         profile: editingStudent.profile
       };
-      
-      await adminAPI.updateUser(editingStudent.id, updateData);
+
+      await adminAPI.updateUser(editingStudent.id!, updateData);
       setEditingStudent(null);
       loadAllUsers();
     } catch (error) {
@@ -174,24 +182,33 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleDeleteStudent = async (studentId: string) => {
-    if (window.confirm('Are you sure you want to delete this student?')) {
-      try {
-        await adminAPI.deleteUser(studentId);
-        loadAllUsers();
-      } catch (error) {
-        console.error('Failed to delete student:', error);
-      }
+    console.log('Delete student triggered:', { studentId });
+
+    if (!studentId) {
+      console.error("Delete failed: missing studentId", studentId);
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this student?')) return;
+
+    try {
+
+      await studentAPI.deleteStudent(studentId);
+      await refresh();
+    } catch (error) {
+      console.error('Failed to delete student:', error);
     }
   };
 
+
   const handleLinkParent = async (parentId: string) => {
     if (!selectedStudent) return;
-    
+
     try {
-      await adminAPI.linkStudentToParent(selectedStudent.id, parentId);
+      await studentAPI.linkStudentToParent(parentId, selectedStudent._id!);
       setShowLinkParent(false);
       setSelectedStudent(null);
-      loadAllUsers();
+      await refresh();
     } catch (error) {
       console.error('Failed to link parent:', error);
     }
@@ -199,11 +216,12 @@ export const UserManagement: React.FC = () => {
 
   const handleUnlinkParent = async (studentId: string, parentId: string) => {
     try {
-      await adminAPI.unlinkStudentFromParent(studentId, parentId);
-      loadAllUsers();
-    } catch (error) {
-      console.error('Failed to unlink parent:', error);
+      await studentAPI.unlinkStudentFromParent(parentId, studentId);
+      await refresh();
+    } catch (err) {
+      console.error("Failed to unlink parent:", err);
     }
+
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -216,13 +234,15 @@ export const UserManagement: React.FC = () => {
   };
 
   const getUserDisplayName = (user: User) => {
-    return user.fullName || `${user.firstName} ${user.lastName}`;
+    const fullName = `${user.firstName} ${user.lastName}`.trim();
+    console.log('Getting display name for user:', fullName);
+    return fullName || 'No Name';
   };
 
   // Filter users based on active tab and search term
   const getFilteredUsers = () => {
     let users: User[] = [];
-    
+
     switch (activeTab) {
       case 'students':
         users = students;
@@ -236,7 +256,7 @@ export const UserManagement: React.FC = () => {
     }
 
     return users.filter(user => {
-      const matchesSearch = 
+      const matchesSearch =
         user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -262,24 +282,24 @@ export const UserManagement: React.FC = () => {
         <p>Manage students, view parents and admins</p>
       </div>
 
-  
+
 
       {/* Tab Navigation */}
       <div className="tabs-container">
         <div className="tabs">
-          <button 
+          <button
             className={`tab ${activeTab === 'students' ? 'active' : ''}`}
             onClick={() => setActiveTab('students')}
           >
             Students ({students.length})
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === 'parents' ? 'active' : ''}`}
             onClick={() => setActiveTab('parents')}
           >
             Parents ({parents.length})
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === 'admins' ? 'active' : ''}`}
             onClick={() => setActiveTab('admins')}
           >
@@ -305,8 +325,8 @@ export const UserManagement: React.FC = () => {
                 className="search-input"
               />
             </div>
-            <select 
-              value={statusFilter} 
+            <select
+              value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="filter-select"
             >
@@ -316,8 +336,8 @@ export const UserManagement: React.FC = () => {
               <option value="suspended">Suspended</option>
             </select>
             {activeTab === 'students' && (
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={() => setShowAddStudent(true)}
               >
                 + Add Student
@@ -368,88 +388,66 @@ export const UserManagement: React.FC = () => {
                       {user.status}
                     </span>
                   </td>
-                  
+
+
                   {/* Students Tab - Guardians Column */}
                   {activeTab === 'students' && (
                     <td>
-                      <div className="guardians-info">
-                        {(user as UserWithGuardians).guardiansDetails && 
-                        (user as UserWithGuardians).guardiansDetails!.length > 0 ? (
-                          <div className="guardians-list">
-                            {(user as UserWithGuardians).guardiansDetails!.map((guardian) => (
-                              <div key={guardian.id} className="guardian-item">
+                      {parents.filter(p => p.guardianOf?.includes(user._id)).length > 0 ? (
+                        <div className="guardians-list">
+                          {parents
+                            .filter(p => p.guardianOf?.includes(user._id))
+                            .map(guardian => (
+                              <div key={guardian._id} className="guardian-item">
                                 <div className="guardian-details">
-                                  <strong>{getUserDisplayName(guardian)}</strong>
+                                  <strong>{`${guardian.firstName} ${guardian.lastName}`}</strong>
                                   <div className="guardian-phone">{guardian.phone || 'No phone'}</div>
                                 </div>
                                 <button
                                   className="btn-unlink"
-                                  onClick={() => handleUnlinkParent(user.id, guardian.id)}
-                                  title="Unlink guardian"
+                                  onClick={() => handleUnlinkParent(user._id!, guardian._id!)}
                                 >
                                   ×
                                 </button>
                               </div>
                             ))}
-                            <button
-                              className="btn-link"
-                              onClick={() => {
-                                setSelectedStudent(user);
-                                setShowLinkParent(true);
-                              }}
-                            >
-                              + Add Another Guardian
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="no-guardians">
-                            <p>No guardians assigned</p>
-                            <button
-                              className="btn-link"
-                              onClick={() => {
-                                setSelectedStudent(user);
-                                setShowLinkParent(true);
-                              }}
-                            >
-                              Add Guardian
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="no-guardians">
+                          <p>No guardians assigned</p>
+                          <button
+                            className="btn-link"
+                            onClick={() => {
+                              setSelectedStudent(user);
+                              setShowLinkParent(true);
+                            }}
+                          >
+                            Add Guardian
+                          </button>
+                        </div>
+                      )}
                     </td>
                   )}
 
-                  {/* Parents Tab - Linked Students Column */}
-                  {activeTab === 'parents' && (
-                    <td>
-                      <div className="linked-students">
-                        {user.guardianOf && user.guardianOf.length > 0 ? (
-                          <span>{user.guardianOf.length} student(s)</span>
-                        ) : (
-                          <span>No students linked</span>
-                        )}
-                      </div>
-                    </td>
-                  )}
 
                   <td>
                     {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
                   </td>
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                  
+
                   {/* Actions Column - Only for Students */}
                   {activeTab === 'students' && (
                     <td>
                       <div className="action-buttons">
-                        <button 
+                        <button
                           className="btn btn-secondary btn-sm"
                           onClick={() => setEditingStudent(user)}
                         >
                           Edit
                         </button>
-                        <button 
+                        <button
                           className="btn btn-danger btn-sm"
-                          onClick={() => handleDeleteStudent(user.id)}
+                          onClick={() => handleDeleteStudent(user.id! || user._id!)}
                         >
                           Delete
                         </button>
@@ -489,7 +487,7 @@ export const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     value={newStudent.firstName}
-                    onChange={(e) => setNewStudent({...newStudent, firstName: e.target.value})}
+                    onChange={(e) => setNewStudent({ ...newStudent, firstName: e.target.value })}
                     required
                   />
                 </div>
@@ -498,7 +496,7 @@ export const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     value={newStudent.lastName}
-                    onChange={(e) => setNewStudent({...newStudent, lastName: e.target.value})}
+                    onChange={(e) => setNewStudent({ ...newStudent, lastName: e.target.value })}
                     required
                   />
                 </div>
@@ -508,7 +506,7 @@ export const UserManagement: React.FC = () => {
                 <input
                   type="email"
                   value={newStudent.email}
-                  onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
+                  onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
                   required
                 />
               </div>
@@ -518,14 +516,14 @@ export const UserManagement: React.FC = () => {
                   <input
                     type="tel"
                     value={newStudent.phone || ''}
-                    onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
+                    onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
                   <label>Status</label>
                   <select
                     value={newStudent.status}
-                    onChange={(e) => setNewStudent({...newStudent, status: e.target.value as any})}
+                    onChange={(e) => setNewStudent({ ...newStudent, status: e.target.value as any })}
                   >
                     <option value="active">Active</option>
                     <option value="invited">Invited</option>
@@ -538,7 +536,7 @@ export const UserManagement: React.FC = () => {
                 <input
                   type="password"
                   placeholder="Leave empty for auto-generate"
-                  onChange={(e) => setNewStudent({...newStudent, password: e.target.value})}
+                  onChange={(e) => setNewStudent({ ...newStudent, password: e.target.value })}
                 />
               </div>
               <div className="modal-actions">
@@ -569,7 +567,7 @@ export const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     value={editingStudent.firstName}
-                    onChange={(e) => setEditingStudent({...editingStudent, firstName: e.target.value})}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, firstName: e.target.value })}
                     required
                   />
                 </div>
@@ -578,7 +576,7 @@ export const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     value={editingStudent.lastName}
-                    onChange={(e) => setEditingStudent({...editingStudent, lastName: e.target.value})}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, lastName: e.target.value })}
                     required
                   />
                 </div>
@@ -588,7 +586,7 @@ export const UserManagement: React.FC = () => {
                 <input
                   type="email"
                   value={editingStudent.email}
-                  onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, email: e.target.value })}
                   required
                 />
               </div>
@@ -598,14 +596,14 @@ export const UserManagement: React.FC = () => {
                   <input
                     type="tel"
                     value={editingStudent.phone || ''}
-                    onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, phone: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
                   <label>Status</label>
                   <select
                     value={editingStudent.status}
-                    onChange={(e) => setEditingStudent({...editingStudent, status: e.target.value as any})}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, status: e.target.value as any })}
                   >
                     <option value="active">Active</option>
                     <option value="invited">Invited</option>
@@ -654,7 +652,7 @@ export const UserManagement: React.FC = () => {
                       </div>
                       <button
                         className="btn btn-primary btn-sm"
-                        onClick={() => handleLinkParent(parent.id)}
+                        onClick={() => handleLinkParent(parent._id)}
                       >
                         Link
                       </button>

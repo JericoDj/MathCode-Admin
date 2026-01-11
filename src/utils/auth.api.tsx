@@ -307,7 +307,7 @@ async getUsersByRole(role: 'student' | 'parent' | 'instructor' | 'admin'): Promi
 
     // Link to parent if provided
     if (studentData.parentId) {
-      await this.linkStudentToParent(user.id, studentData.parentId);
+      await this.linkStudentToParent(user.id!, studentData.parentId);
     }
 
     return user;

@@ -6,7 +6,9 @@ import { useAdminUser } from './contexts/AdminUserContext';
 import { PackageProvider } from './contexts/PackageProvider';
 import { UserManagementDialogProvider } from './contexts/UserManagementDialogProvider';
 import { UserProvider } from './contexts/UserProvider';
-import { SessionProvider } from './contexts/SessionProvider'; 
+import { SessionProvider } from './contexts/SessionProvider';
+import { StudentProvider } from './contexts/StudentProvider';
+import { BillingProvider } from './contexts/BillingProvider';
 
 import { AppNavBar } from './components/AppNavBar/AppNavBar';
 import { AdminLogin } from './pages/Auth/AdminLogin';
@@ -17,7 +19,9 @@ import { SessionsManagement } from './pages/AdminPage/Sessions/SessionsManagemen
 import { Analytics } from './pages/AdminPage/Analytics/Analytics';
 import { AdminSettings } from './pages/AdminPage/Settings/AdminSettings';
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner';
+import { BillingPage } from './pages/AdminPage/BillingPage/BillingPage.tsx';
 import './App.css';
+
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -54,7 +58,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<AdminLogin />} />
-      
+
       <Route path="/" element={
         <ProtectedRoute>
           <AdminLayout>
@@ -62,7 +66,7 @@ function AppRoutes() {
           </AdminLayout>
         </ProtectedRoute>
       } />
-      
+
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <AdminLayout>
@@ -70,7 +74,7 @@ function AppRoutes() {
           </AdminLayout>
         </ProtectedRoute>
       } />
-      
+
       <Route path="/users" element={
         <ProtectedRoute>
           <AdminLayout>
@@ -78,7 +82,7 @@ function AppRoutes() {
           </AdminLayout>
         </ProtectedRoute>
       } />
-      
+
       <Route path="/packages" element={
         <ProtectedRoute>
           <AdminLayout>
@@ -86,7 +90,7 @@ function AppRoutes() {
           </AdminLayout>
         </ProtectedRoute>
       } />
-      
+
       <Route path="/sessions" element={ // Added Sessions route
         <ProtectedRoute>
           <AdminLayout>
@@ -94,7 +98,15 @@ function AppRoutes() {
           </AdminLayout>
         </ProtectedRoute>
       } />
-      
+
+      <Route path="/billings" element={
+  <ProtectedRoute>
+    <AdminLayout>
+      <BillingPage />
+    </AdminLayout>
+  </ProtectedRoute>
+} />
+
       <Route path="/analytics" element={
         <ProtectedRoute>
           <AdminLayout>
@@ -102,7 +114,7 @@ function AppRoutes() {
           </AdminLayout>
         </ProtectedRoute>
       } />
-      
+
       <Route path="/settings" element={
         <ProtectedRoute>
           <AdminLayout>
@@ -110,7 +122,7 @@ function AppRoutes() {
           </AdminLayout>
         </ProtectedRoute>
       } />
-      
+
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
@@ -120,13 +132,21 @@ export default function App() {
   return (
     <AdminUserProvider>
       <UserProvider>
-        <PackageProvider>
-           <SessionProvider> {/* Add SessionProvider here */}
-          <UserManagementDialogProvider>
-            <AppRoutes />
-          </UserManagementDialogProvider>
-           </SessionProvider>
-        </PackageProvider>
+        <StudentProvider>
+          <PackageProvider>
+            <SessionProvider> {/* Add SessionProvider here */}
+              <BillingProvider>
+              <UserManagementDialogProvider>
+                <AppRoutes />
+              </UserManagementDialogProvider>
+              </BillingProvider>
+            </SessionProvider>
+
+          </PackageProvider>
+
+        </StudentProvider>
+
+
       </UserProvider>
     </AdminUserProvider>
   );

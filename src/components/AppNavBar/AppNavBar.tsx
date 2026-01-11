@@ -28,8 +28,10 @@ export const AppNavBar: React.FC = () => {
         <Link to="/users" className="nav-btn">User Management</Link>
         <Link to="/packages" className="nav-btn">Packages</Link>
         <Link to="/sessions" className="nav-btn">Sessions</Link> {/* Added Sessions link */}
+        <Link to="/billings" className="nav-btn">Billing</Link>
         <Link to="/analytics" className="nav-btn">Analytics</Link>
         <Link to="/settings" className="nav-btn">Settings</Link>
+
       </div>
 
       {/* User Info / Dropdown */}

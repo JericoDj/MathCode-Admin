@@ -1,0 +1,47 @@
+.billing-page {
+  padding: 20px;
+}
+
+.billing-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.billing-table th,
+.billing-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+
+.billing-table th {
+  background: var(--primary-light, #f3f3f3);
+  text-align: left;
+}
+
+.billing-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.delete-btn {
+  background: #d9534f;
+  border: none;
+  color: #fff;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: #c9302c;
+}
+
+.billing-loading {
+  padding: 20px;
+}
