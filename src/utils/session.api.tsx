@@ -96,13 +96,7 @@ class SessionAPI {
     };
   }
 
-  private calculateCredits(duration: number): number {
-    if (duration <= 30) return 0.5;
-    if (duration <= 60) return 1;
-    if (duration <= 90) return 1.5;
-    if (duration <= 120) return 2;
-    return Math.ceil(duration / 60);
-  }
+
 }
 
 export const sessionAPI = new SessionAPI();
