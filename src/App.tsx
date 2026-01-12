@@ -1,6 +1,5 @@
 // App.tsx
 import React from 'react';
-import { BrowserRouter as Router } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminUserProvider } from './contexts/AdminUserProvider';
 import { useAdminUser } from './contexts/AdminUserContext';
@@ -135,17 +134,19 @@ export default function App() {
       <UserProvider>
         <StudentProvider>
           <PackageProvider>
-            <SessionProvider>
+            <SessionProvider> {/* Add SessionProvider here */}
               <BillingProvider>
-                <UserManagementDialogProvider>
-                  <Router>
-                    <AppRoutes />
-                  </Router>
-                </UserManagementDialogProvider>
+              <UserManagementDialogProvider>
+                <AppRoutes />
+              </UserManagementDialogProvider>
               </BillingProvider>
             </SessionProvider>
+
           </PackageProvider>
+
         </StudentProvider>
+
+
       </UserProvider>
     </AdminUserProvider>
   );

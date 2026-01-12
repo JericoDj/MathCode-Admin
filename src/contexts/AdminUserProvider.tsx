@@ -25,6 +25,9 @@ useEffect(() => {
     try {
       setIsLoading(true);
       const { user, token } = await adminAuthAPI.login(credentials); // Attempt login
+      console.log("Logged in user:", user);
+      console.log("Received token:", token);
+
       adminAuthAPI.setUser(user); // Store the user in localStorage
       adminAuthAPI.setToken(token); // Store the token in localStorage
       setAdminUser(user); // Update the context with the logged-in user

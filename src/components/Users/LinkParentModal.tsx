@@ -37,7 +37,7 @@ export const LinkParentModal: React.FC<LinkParentModalProps> = ({
                   </div>
                   <button
                     className="btn btn-primary btn-sm"
-                    onClick={() => onLinkParent(parent.id)}
+                    onClick={() => parent.id && onLinkParent(parent.id)}
                   >
                     Link
                   </button>

@@ -1,6 +1,6 @@
 import type { Billing } from "../types/Billing";
 
-const BASE_URL = "http://localhost:4000/api/billing";
+const BASE_URL = "https://math-code-backend.vercel.app/api/billing";
 
 const getToken = () => localStorage.getItem("adminToken") || "";
 
@@ -24,6 +24,7 @@ export const billingApi = {
   create: async (data: Partial<Billing>): Promise<Billing> => {
     const res = await fetch(BASE_URL, {
       method: "POST",
+      credentials: "include",
       headers: {
         Authorization: `Bearer ${getToken()}`,
         "Content-Type": "application/json",
@@ -36,6 +37,7 @@ export const billingApi = {
   updateStatus: async (id: string, status: string) => {
     const res = await fetch(`${BASE_URL}/${id}/status`, {
       method: "PATCH",
+      credentials: "include",
       headers: {
         Authorization: `Bearer ${getToken()}`,
         "Content-Type": "application/json",

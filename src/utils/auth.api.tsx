@@ -1,6 +1,8 @@
 import type { AdminUser, LoginCredentials, User, CreateUserDTO, UpdateUserDTO, UserFilterOptions } from '../types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BASE_URL = import.meta.env.PROD
+  ? "https://math-code-backend.vercel.app"
+  : "http://localhost:4000";
 const LOCAL_STORAGE_USER_KEY = 'adminUser';
 const LOCAL_STORAGE_TOKEN_KEY = 'adminToken';
 
@@ -21,11 +23,14 @@ export const adminAuthAPI = {
   async login(credentials: LoginCredentials): Promise<{ user: AdminUser; token: string }> {
     const res = await fetch(`${BASE_URL}/api/users/login`, {
       method: 'POST',
+      credentials: "include",
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
     });
+    console.log("Login response:", res);
 
     if (!res.ok) {
+
       const error = await res.json();
       throw new Error(error.message || 'Login failed');
     }
@@ -138,6 +143,7 @@ export const adminAPI = {
   async getDashboardData(): Promise<AnalyticsData> {
     const res = await fetch(`${BASE_URL}/api/dashboard`, {
       method: 'GET',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -177,6 +183,7 @@ export const adminAPI = {
   
   const res = await fetch(url, {
     method: 'GET',
+    credentials: "include",
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -201,6 +208,7 @@ export const adminAPI = {
 async getUsersByRole(role: 'student' | 'parent' | 'instructor' | 'admin'): Promise<User[]> {
   const res = await fetch(`${BASE_URL}/api/students/role/${role}`, {
     method: 'GET',
+    credentials: "include",
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -221,6 +229,7 @@ async getUsersByRole(role: 'student' | 'parent' | 'instructor' | 'admin'): Promi
   async getUserById(userId: string): Promise<User> {
     const res = await fetch(`${BASE_URL}/api/admin/users/${userId}`, {
       method: 'GET',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -240,6 +249,7 @@ async getUsersByRole(role: 'student' | 'parent' | 'instructor' | 'admin'): Promi
   async createUser(userData: CreateUserDTO): Promise<User> {
     const res = await fetch(`${BASE_URL}/api/students/`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -260,6 +270,7 @@ async getUsersByRole(role: 'student' | 'parent' | 'instructor' | 'admin'): Promi
   async updateUser(userId: string, userData: UpdateUserDTO): Promise<User> {
     const res = await fetch(`${BASE_URL}/api/students/${userId}`, {
       method: 'PATCH',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -280,6 +291,7 @@ async getUsersByRole(role: 'student' | 'parent' | 'instructor' | 'admin'): Promi
   async deleteUser(userId: string): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/admin/users/${userId}`, {
       method: 'DELETE',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -317,6 +329,7 @@ async getUsersByRole(role: 'student' | 'parent' | 'instructor' | 'admin'): Promi
 async linkStudentToParent(studentId: string, parentId: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/api/students/parent/${parentId}/link/${studentId}`, {
     method: 'POST',
+    credentials: "include",
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -333,6 +346,7 @@ async linkStudentToParent(studentId: string, parentId: string): Promise<void> {
 async unlinkStudentFromParent(studentId: string, parentId: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/api/students/parent/${parentId}/unlink/${studentId}`, {
     method: 'DELETE',
+    credentials: "include",
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -348,6 +362,7 @@ async unlinkStudentFromParent(studentId: string, parentId: string): Promise<void
 async getUpdatedStudentDetails(studentId: string): Promise<{ parentId: string; guardians: any[] }> {
   const res = await fetch(`${BASE_URL}/api/users/${studentId}`, {
     method: 'GET',
+    credentials: "include",
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -369,6 +384,7 @@ async getUpdatedStudentDetails(studentId: string): Promise<{ parentId: string; g
 async getParentDetails(parentId: string): Promise<User> {
   const res = await fetch(`${BASE_URL}/api/users/${parentId}`, {
     method: 'GET',
+    credentials: "include",
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -397,6 +413,7 @@ async getParentDetails(parentId: string): Promise<User> {
   async getStudentsByParent(parentId: string): Promise<User[]> {
     const res = await fetch(`${BASE_URL}/api/admin/parents/${parentId}/students`, {
       method: 'GET',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -468,6 +485,7 @@ async getParentDetails(parentId: string): Promise<User> {
   async inviteUser(userId: string): Promise<User> {
     const res = await fetch(`${BASE_URL}/api/admin/users/${userId}/invite`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -491,6 +509,7 @@ async getParentDetails(parentId: string): Promise<User> {
   async bulkCreateUsers(usersData: CreateUserDTO[]): Promise<User[]> {
     const res = await fetch(`${BASE_URL}/api/admin/users/bulk`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -511,6 +530,7 @@ async getParentDetails(parentId: string): Promise<User> {
   async bulkLinkStudents(links: Array<{ studentId: string; parentId: string }>): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/admin/students/bulk-link`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,
@@ -533,6 +553,7 @@ export const passwordAPI = {
   async forgotPassword(email: string): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
       },
@@ -549,6 +570,7 @@ export const passwordAPI = {
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/auth/reset-password`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
       },
@@ -565,6 +587,7 @@ export const passwordAPI = {
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/auth/change-password`, {
       method: 'POST',
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY)}`,

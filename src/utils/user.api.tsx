@@ -2,7 +2,8 @@
 import type { User, UpdateUserData } from '../types/user';
 
 class UserAPI {
-  private baseURL = 'http://localhost:4000/api';
+  private baseURL =
+    (import.meta.env.VITE_API_URL || 'http://localhost:4000') + '/api';
 
   private getAuthToken(): string {
     const token = localStorage.getItem('adminToken');
@@ -14,15 +15,18 @@ class UserAPI {
 
   private async request(endpoint: string, options: RequestInit = {}) {
     const token = this.getAuthToken();
-    
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+
+    const config: RequestInit = {
       ...options,
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
-    });
+    };
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, config);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -38,7 +42,7 @@ class UserAPI {
   }
 
   async getUser(userId: string): Promise<User> {
-    return await this.request(`/users/${userId}`);
+    return this.request(`/users/${userId}`);
   }
 
   async updateUser(userId: string, userData: UpdateUserData): Promise<User> {
@@ -50,18 +54,11 @@ class UserAPI {
   }
 
   async addCredits(userId: string, creditsToAdd: number): Promise<User> {
-    try {
-      // First get the current user to know their current credits
-      const currentUser = await this.getUser(userId);
-      const currentCredits = currentUser.credits || 0;
-      const newCredits = currentCredits + creditsToAdd;
-      
-      // Then update with the new total
-      return await this.updateUser(userId, { credits: newCredits });
-    } catch (error) {
-      console.error('Failed to add credits:', error);
-      throw new Error(`Failed to add credits: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const currentUser = await this.getUser(userId);
+    const currentCredits = currentUser.credits || 0;
+    const newCredits = currentCredits + creditsToAdd;
+
+    return this.updateUser(userId, { credits: newCredits });
   }
 }
 

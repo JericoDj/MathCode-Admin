@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, } from 'react';
 import type { User, CreateUserDTO, UpdateUserDTO } from '../../../types';
 import { adminAPI } from '../../../utils/auth.api.tsx';
 import { studentAPI } from '../../../utils/student.api';
@@ -8,15 +8,12 @@ import { useStudentContext, } from "../../../contexts/StudentContext";
 import './UserManagement.css';
 
 // Extended interface for users with populated guardian data
-interface UserWithGuardians extends User {
-  guardiansDetails?: User[];
-  guardianOfDetails?: User[];
-}
+
 
 export const UserManagement: React.FC = () => {
 
 
-  const { students, parents, loading, refresh } = useStudentContext();
+  const { students, parents, refresh } = useStudentContext();
   const [admins, setAdmins] = useState<User[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);

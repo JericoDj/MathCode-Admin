@@ -1,11 +1,18 @@
 // src/utils/package.api.ts
 import axios from 'axios';
 
-// Define the base URL for the API (replace with your actual backend URL)
-const API_URL = 'http://localhost:4000/api/packages';
+const API_URL = import.meta.env.PROD
+  ? 'https://math-code-backend.vercel.app/api/packages'
+  : 'http://localhost:4000/api/packages';
 
-// Helper function to handle HTTP requests and responses
-const apiRequest = async ({ url, method, data, headers, params }: {
+// Shared request helper
+const apiRequest = async ({
+  url,
+  method,
+  data,
+  headers,
+  params
+}: {
   url: string;
   method: string;
   data?: any;
@@ -13,144 +20,111 @@ const apiRequest = async ({ url, method, data, headers, params }: {
   params?: any;
 }) => {
   try {
-    // Include headers and params in the request if provided, else use empty objects
     const response = await axios({
       url,
       method,
       data,
-      headers: headers || {}, // Default to empty object if no headers are provided
-      params: params || {},   // Default to empty object if no params are provided
+      params: params || {},
+      headers: headers || {},
+      withCredentials: true // important for sessions/cookies in prod
     });
 
-    // Return the data from the response
     return response.data;
   } catch (error: unknown) {
-    // Error handling when the error is of type unknown
     if (axios.isAxiosError(error) && error.response) {
-      // Axios error structure
       console.error('API request error:', error.response.data.message || 'Unknown error');
-      throw new Error(error.response?.data?.message || 'Something went wrong');
-    } else {
-      // If the error is not an Axios error, handle it as a generic unknown error
-      console.error('Unknown error occurred:', error);
-      throw new Error('Something went wrong');
+      throw new Error(error.response.data.message || 'Something went wrong');
     }
+    console.error('Unknown error occurred:', error);
+    throw new Error('Something went wrong');
   }
 };
 
-// Package API functions
+// =======================
+// PACKAGE API FUNCTIONS
+// =======================
 
 // Fetch all packages
 export const fetchPackages = async () => {
   const token = localStorage.getItem('adminToken');
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`, // Adding the token to Authorization header
-      }
-    : {};
-  const data = await apiRequest({
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+  return apiRequest({
     url: API_URL,
     method: 'GET',
-    headers: headers, 
+    headers
   });
-
-  return data;
 };
 
-// Create a new package
+// Create a package
 export const createPackage = async (packageData: any) => {
   const token = localStorage.getItem('adminToken');
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`, // Adding the token to Authorization header
-      }
-    : {};
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   return apiRequest({
     url: API_URL,
     method: 'POST',
-    data: packageData,  // Pass package data in the object
-    headers: headers,
+    data: packageData,
+    headers
   });
 };
 
-// Update an existing package
+// Update a package
 export const updatePackage = async (packageId: string, updatedData: any) => {
-  const url = `${API_URL}/${packageId}`;
   const token = localStorage.getItem('adminToken');
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`, // Adding the token to Authorization header
-      }
-    : {};
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   return apiRequest({
-    url: url,
+    url: `${API_URL}/${packageId}`,
     method: 'PATCH',
-    data: updatedData, // Pass updated data in the object
-    headers: headers,
+    data: updatedData,
+    headers
   });
 };
 
-// Assign a tutor to a package
+// Assign tutor
 export const assignTutor = async (packageId: string, tutorId: string) => {
-  const url = `${API_URL}/${packageId}/assign-tutor`;
-  const data = { tutorId };
   const token = localStorage.getItem('adminToken');
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`, // Adding the token to Authorization header
-      }
-    : {};
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   return apiRequest({
-    url: url,
+    url: `${API_URL}/${packageId}/assign-tutor`,
     method: 'PUT',
-    data: data,  // Pass data in the object
-    headers: headers,
+    data: { tutorId },
+    headers
   });
 };
 
-// Optionally, delete a package (if required)
+// Delete package
 export const deletePackage = async (packageId: string) => {
-  const url = `${API_URL}/${packageId}`;
   const token = localStorage.getItem('adminToken');
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`, // Adding the token to Authorization header
-      }
-    : {};
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   return apiRequest({
-    url: url,
+    url: `${API_URL}/${packageId}`,
     method: 'DELETE',
-    headers: headers, // No data for DELETE request, just headers
+    headers
   });
 };
 
-// Fetch tutors (for assigning a tutor to a package)
+// Fetch tutors (fix placeholder)
 export const fetchTutors = async () => {
-  const url = `http://localhost:4000/api/packages/{}`; // Adjust as needed
   const token = localStorage.getItem('adminToken');
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`, // Adding the token to Authorization header
-      }
-    : {};
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
+  // Adjust based on your backend (e.g. "/tutors")
   return apiRequest({
-    url: url,
+    url: `${API_URL}/tutors`,
     method: 'GET',
-    headers: headers, // No data, just headers
+    headers
   });
 };
 
-// Export all the packageAPI methods as a single object
 export const packageAPI = {
   fetchPackages,
   createPackage,
   updatePackage,
   assignTutor,
   deletePackage,
-  fetchTutors,
+  fetchTutors
 };

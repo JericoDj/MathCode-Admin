@@ -3,24 +3,24 @@ import type { Session } from '../pages/AdminPage/Sessions/SessionsManagement';
 import type { CreateSessionData, UpdateSessionData } from '../contexts/SessionContext';
 
 class SessionAPI {
-  private baseURL = 'http://localhost:4000/api';
+  private baseURL =
+    (import.meta.env.VITE_API_URL || 'http://localhost:4000') + '/api';
 
   private getAuthToken(): string {
     const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
+    if (!token) throw new Error('No authentication token found');
     return token;
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
     const token = this.getAuthToken();
-    
+
     const config: RequestInit = {
       ...options,
+      credentials: "include",
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     };
@@ -40,15 +40,8 @@ class SessionAPI {
   }
 
   async getAllSessions(): Promise<Session[]> {
-    try {
-      const data = await this.request('/sessions');
-      // Transform backend data to match frontend Session type
-      return (data.sessions || data.items || []).map(this.transformSessionData);
-    } catch (error) {
-      console.error('Failed to fetch sessions:', error);
-      // For now, return empty array - remove this when backend is ready
-      return this.getMockSessions();
-    }
+    const data = await this.request('/sessions');
+    return (data.sessions || data.items || []).map(this.transformSessionData);
   }
 
   async getSession(sessionId: string): Promise<Session> {
@@ -57,60 +50,36 @@ class SessionAPI {
   }
 
   async createSession(sessionData: CreateSessionData): Promise<Session> {
-    try {
-      const data = await this.request('/sessions', {
-        method: 'POST',
-        body: JSON.stringify(sessionData),
-      });
-      return this.transformSessionData(data);
-    } catch (error) {
-      console.error('Failed to create session:', error);
-      // For demo purposes, create a mock session
-      return this.createMockSession(sessionData);
-    }
+    const data = await this.request('/sessions', {
+      method: 'POST',
+      body: JSON.stringify(sessionData),
+    });
+    return this.transformSessionData(data);
   }
 
   async updateSession(sessionId: string, updateData: UpdateSessionData): Promise<Session> {
-    try {
-      const data = await this.request(`/sessions/${sessionId}`, {
-        method: 'PUT',
-        body: JSON.stringify(updateData),
-      });
-      return this.transformSessionData(data);
-    } catch (error) {
-      console.error('Failed to update session:', error);
-      throw error;
-    }
+    const data = await this.request(`/sessions/${sessionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+    return this.transformSessionData(data);
   }
 
   async deleteSession(sessionId: string): Promise<void> {
-    try {
-      await this.request(`/sessions/${sessionId}`, {
-        method: 'DELETE',
-      });
-    } catch (error) {
-      console.error('Failed to delete session:', error);
-      throw error;
-    }
+    await this.request(`/sessions/${sessionId}`, { method: 'DELETE' });
   }
 
   async updateSessionStatus(sessionId: string, status: Session['status']): Promise<Session> {
-    try {
-      const data = await this.request(`/sessions/${sessionId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      });
-      return this.transformSessionData(data);
-    } catch (error) {
-      console.error('Failed to update session status:', error);
-      throw error;
-    }
+    const data = await this.request(`/sessions/${sessionId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+    return this.transformSessionData(data);
   }
 
-  // Helper method to transform backend data to frontend Session type
   private transformSessionData(data: any): Session {
     return {
-      id: data._id || data.id, // Handle both _id (MongoDB) and id (frontend)
+      id: data._id || data.id,
       studentName: data.studentName,
       parentName: data.parentName,
       tutorName: data.tutorName,
@@ -125,84 +94,6 @@ class SessionAPI {
       meetingLink: data.meetingLink,
       materials: data.materials || [],
     };
-  }
-
-  // Mock session creation for demo purposes
-  private createMockSession(sessionData: CreateSessionData): Session {
-    const mockSession: Session = {
-      id: Math.random().toString(36).substr(2, 9),
-      studentName: sessionData.studentName,
-      parentName: sessionData.parentName,
-      tutorName: sessionData.tutorName,
-      subject: sessionData.subject,
-      date: sessionData.date,
-      time: sessionData.time,
-      duration: sessionData.duration,
-      status: sessionData.status,
-      packageType: sessionData.packageType,
-      creditsUsed: this.calculateCredits(sessionData.duration),
-      notes: sessionData.notes,
-      meetingLink: sessionData.meetingLink,
-      materials: [],
-    };
-    
-    return mockSession;
-  }
-
-  // Mock sessions for demo
-  private getMockSessions(): Session[] {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-
-    return [
-      {
-        id: '1',
-        studentName: 'Luna De Jesus',
-        parentName: 'Parent Name',
-        tutorName: 'Teacher Viv',
-        subject: 'Singapore Math',
-        date: tomorrow.toISOString().split('T')[0],
-        time: '11:00',
-        duration: 60,
-        status: 'scheduled',
-        packageType: '1:1 Private Tutoring',
-        creditsUsed: 1,
-        meetingLink: 'https://meet.google.com/abc-def-ghi',
-        notes: 'Math session'
-      },
-      {
-        id: '2',
-        studentName: 'Luna De Jesus',
-        parentName: 'Parent Name',
-        tutorName: 'Teacher Viv',
-        subject: 'Singapore Math',
-        date: today.toISOString().split('T')[0],
-        time: '08:30',
-        duration: 60,
-        status: 'completed',
-        packageType: '1:1 Private Tutoring',
-        creditsUsed: 1,
-        meetingLink: 'https://meet.google.com/jkl-mno-pqr',
-        notes: 'Completed session'
-      },
-      {
-        id: '3',
-        studentName: 'Alice Johnson',
-        parentName: 'Bob Johnson',
-        tutorName: 'Dr. Johnson',
-        subject: 'Advanced Mathematics',
-        date: nextWeek.toISOString().split('T')[0],
-        time: '15:00',
-        duration: 90,
-        status: 'scheduled',
-        packageType: '1:1 Private Tutoring',
-        creditsUsed: 1.5,
-        notes: 'Advanced math session'
-      }
-    ];
   }
 
   private calculateCredits(duration: number): number {

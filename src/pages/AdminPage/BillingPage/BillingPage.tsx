@@ -7,7 +7,7 @@ import { useUser } from "../../../contexts/UserContext";
 export const BillingPage: React.FC = () => {
   const {
     billings,
-    loading,
+
     updateBillingStatus,
     deleteBilling,
     fetchBillings,
